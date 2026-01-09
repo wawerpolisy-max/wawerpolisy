@@ -1,123 +1,64 @@
 import { Suspense } from "react"
+import type { Metadata } from "next"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { QuoteForm } from "@/components/forms/quote-form"
-import { Shield, Clock, CheckCircle2 } from "lucide-react"
 
-export const dynamic = "force-dynamic"
-
-export const metadata = {
-  title: "Wycena ubezpieczenia",
+export const metadata: Metadata = {
+  title: "Wycena ubezpieczenia — WawerPolisy",
   description:
-    "Poproś o wycenę: OC/AC, mieszkanie, życie, zdrowie, podróże, firma. Minimum danych na start, konkretne warianty i jasne różnice.",
-}
-
-function QuoteFormShell() {
-  return (
-    <CardContent>
-      <Suspense fallback={<div className="text-sm text-muted-foreground">Ładowanie formularza…</div>}>
-        <QuoteForm />
-      </Suspense>
-    </CardContent>
-  )
+    "Szybka wycena ubezpieczenia w Warszawie (Wawer i okolice). Wypełnij krótki formularz — oddzwonię z ofertą.",
 }
 
 export default function WycenaPage() {
   return (
-    <div className="min-h-screen">
-      <section className="bg-gradient-to-br from-sky-500 to-sky-600 text-white py-16">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl lg:text-5xl font-bold mb-6">Wycena ubezpieczenia</h1>
-            <p className="text-xl text-sky-100 text-pretty">
-              Ładny landing nic nie znaczy, jeśli nie dowozi decyzji. Tu masz prostą ścieżkę: podajesz minimum informacji,
-              ja przygotowuję 2–3 warianty i wyjaśniam różnice.
-            </p>
-          </div>
+    <main className="min-h-screen bg-background">
+      <section className="container mx-auto px-4 py-10">
+        <div className="max-w-3xl">
+          <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
+            Wycena ubezpieczenia
+          </h1>
+          <p className="mt-3 text-muted-foreground">
+            Wypełnij krótki formularz. Jeśli czegoś nie wiesz — pomiń, dopytam.
+          </p>
         </div>
-      </section>
 
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto mb-12">
+        <div className="mt-8 grid gap-6 md:grid-cols-3">
+          <div className="md:col-span-2">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-3">
-                  <Shield className="h-6 w-6 text-primary" />
-                  Bez lania wody
-                </CardTitle>
+                <CardTitle>Formularz wyceny</CardTitle>
               </CardHeader>
-              <CardContent className="text-muted-foreground">
-                Dostajesz konkret: zakres, wyłączenia, limity i co realnie zmienia składkę.
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-3">
-                  <Clock className="h-6 w-6 text-primary" />
-                  Szybko
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-muted-foreground">
-                Jeśli podasz telefon lub e-mail – wracam z pytaniami doprecyzowującymi i wariantami.
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-3">
-                  <CheckCircle2 className="h-6 w-6 text-primary" />
-                  Minimum barier
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-muted-foreground">
-                Nie ma tu „muru” w postaci 20 pól. Na start wystarczy krótkie zgłoszenie.
+              <CardContent>
+                <Suspense
+                  fallback={
+                    <div className="text-sm text-muted-foreground">
+                      Ładowanie formularza…
+                    </div>
+                  }
+                >
+                  <QuoteForm />
+                </Suspense>
               </CardContent>
             </Card>
           </div>
 
-          <div className="max-w-4xl mx-auto">
-            <Card className="shadow-lg">
+          <div className="md:col-span-1">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-2xl">Formularz wyceny</CardTitle>
-                <p className="text-muted-foreground">
-                  Podaj telefon lub e-mail. Jeśli nie masz teraz danych – opisz temat jednym zdaniem.
+                <CardTitle>Jak to działa</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-muted-foreground">
+                <p>- Wypełniasz formularz (2–3 min).</p>
+                <p>- Analizuję Twoją sytuację i porównuję warianty.</p>
+                <p>- Oddzwaniam / odpisuję z propozycją.</p>
+                <p className="pt-2 text-xs">
+                  Nie spamuję. Dane wykorzystuję tylko do przygotowania wyceny.
                 </p>
-              </CardHeader>
-
-              <QuoteFormShell />
+              </CardContent>
             </Card>
-
-            <div className="mt-10 grid md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Najczęstsze pytania przed wyceną</CardTitle>
-                </CardHeader>
-                <CardContent className="text-muted-foreground">
-                  <ul className="list-disc pl-5 space-y-2">
-                    <li>„Czy agent dolicza marżę?” – zwykle nie; liczy się składka i warunki.</li>
-                    <li>„Czemu dwie polisy mają tę samą cenę, a inną ochronę?” – różnią się limitami i wyłączeniami.</li>
-                    <li>„Co jest ważniejsze: cena czy zakres?” – zależy od Twojego ryzyka. Ustalimy priorytety.</li>
-                  </ul>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Co przyspiesza proces</CardTitle>
-                </CardHeader>
-                <CardContent className="text-muted-foreground">
-                  <ul className="list-disc pl-5 space-y-2">
-                    <li>Numer obecnej polisy / termin końca (jeśli to przedłużenie).</li>
-                    <li>Dla auta: rok, marka/model, historia szkód.</li>
-                    <li>Dla mieszkania: metraż, lokalizacja, wartość mienia.</li>
-                  </ul>
-                </CardContent>
-              </Card>
-            </div>
           </div>
         </div>
       </section>
-    </div>
+    </main>
   )
 }
