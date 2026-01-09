@@ -1,7 +1,7 @@
-import { Suspense } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { QuoteForm } from "@/components/forms/quote-form"
 import { Shield, Clock, CheckCircle2 } from "lucide-react"
+import { Suspense } from "react"
 
 export const metadata = {
   title: "Wycena ubezpieczenia",
@@ -63,53 +63,3 @@ export default function WycenaPage() {
               </CardContent>
             </Card>
           </div>
-
-          <div className="max-w-4xl mx-auto">
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-2xl">Formularz wyceny</CardTitle>
-                <p className="text-muted-foreground">
-                  Podaj telefon lub e-mail. Jeśli nie masz teraz danych – opisz temat jednym zdaniem.
-                </p>
-              </CardHeader>
-             <CardContent>
-  <Suspense fallback={<div className="text-sm text-muted-foreground">Ładowanie formularza…</div>}>
-    <QuoteForm />
-  </Suspense>
-</CardContent>
-
-            </Card>
-
-            <div className="mt-10 grid md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Najczęstsze pytania przed wyceną</CardTitle>
-                </CardHeader>
-                <CardContent className="text-muted-foreground">
-                  <ul className="list-disc pl-5 space-y-2">
-                    <li>„Czy agent dolicza marżę?” – zwykle nie; liczy się składka i warunki.</li>
-                    <li>„Czemu dwie polisy mają tę samą cenę, a inną ochronę?” – różnią się limitami i wyłączeniami.</li>
-                    <li>„Co jest ważniejsze: cena czy zakres?” – zależy od Twojego ryzyka. Ustalimy priorytety.</li>
-                  </ul>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Co przyspiesza proces</CardTitle>
-                </CardHeader>
-                <CardContent className="text-muted-foreground">
-                  <ul className="list-disc pl-5 space-y-2">
-                    <li>Numer obecnej polisy / termin końca (jeśli to przedłużenie).</li>
-                    <li>Dla auta: rok, marka/model, historia szkód.</li>
-                    <li>Dla mieszkania: metraż, lokalizacja, wartość mienia.</li>
-                  </ul>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
-  )
-}
