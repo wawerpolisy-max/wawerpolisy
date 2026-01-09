@@ -1,222 +1,197 @@
 "use client"
 
-import type React from "react"
-import { useMemo, useState } from "react"
-import { useSearchParams } from "next/navigation"
 import Link from "next/link"
+import { useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { CheckCircle } from "lucide-react"
 
 type FormState = {
-  insuranceType: string
-  fullName: string
+  name: string
   phone: string
   email: string
-  preferredContact: string
+  product: string
   message: string
-  details: string
   consent: boolean
-  website: string // honeypot
 }
 
-function mapTypParam(typ: string | null) {
-  if (!typ) return ""
-  const t = typ.toLowerCase()
-  const mapping: Record<string, string> = {
-    komunikacyjne: "komunikacyjne",
-    mieszkaniowe: "mieszkaniowe",
-    turystyczne: "turystyczne",
-    zdrowotne: "zdrowotne",
-    zyciowe: "zyciowe",
-    firmowe: "firmowe",
-  }
-  return mapping[t] || ""
+const PRODUCT_MAP: Record<string, string> = {
+  "oc-ac": "OC/AC",
+  oc: "OC",
+  ac: "AC",
+  "oc-ac-nnw": "OC/AC/NNW",
+  nnw: "NNW",
+  "mieszkanie-dom": "Mieszkanie/Dom",
+  mieszkanie: "Mieszkanie",
+  dom: "Dom",
+  "na-zycie": "Na życie",
+  zycie: "Na życie",
+  "dla-firmy": "Dla firmy",
+  firma: "Dla firmy",
+  "turystyczne": "Turystyczne",
+  turystyka: "Turystyczne",
+  "zdrowotne": "Zdrowotne",
+  zdrowie: "Zdrowotne",
+}
+
+function normalizeProduct(p: string | null): string {
+  if (!p) return ""
+  const key = p.trim().toLowerCase()
+  return PRODUCT_MAP[key] ?? p
 }
 
 export function QuoteForm() {
-  const searchParams = useSearchParams()
-  const defaultType = useMemo(() => mapTypParam(searchParams.get("typ") || searchParams.get("type")), [searchParams])
-
+  const [prefillProduct, setPrefillProduct] = useState<string>("")
   const [state, setState] = useState<FormState>({
-    insuranceType: defaultType,
-    fullName: "",
+    name: "",
     phone: "",
     email: "",
-    preferredContact: "telefon",
+    product: "",
     message: "",
-    details: "",
     consent: false,
-    website: "",
   })
-
-  const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
 
-  const hasAnyContact = state.phone.trim().length >= 7 || state.email.includes("@")
+  // Zamiast useSearchParams(): czytamy query dopiero w przeglądarce po mount
+  useEffect(() => {
+    try {
+      const sp = new URLSearchParams(window.location.search)
+      const p = sp.get("product")
+      const normalized = normalizeProduct(p)
+      if (normalized) setPrefillProduct(normalized)
+    } catch {
+      // ignorujemy - i tak formularz działa bez prefill
+    }
+  }, [])
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  // Jeśli przyszło ?product=..., wypełnij pole "product" tylko jeśli użytkownik jeszcze nic nie wybrał
+  useEffect(() => {
+    if (!prefillProduct) return
+    setState((s) => (s.product ? s : { ...s, product: prefillProduct }))
+  }, [prefillProduct])
+
+  const isValid = useMemo(() => {
+    const phoneOk = state.phone.trim().length >= 7
+    const nameOk = state.name.trim().length >= 2
+    const productOk = state.product.trim().length >= 2
+    return phoneOk && nameOk && productOk && state.consent
+  }, [state])
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
+    setSuccess(false)
 
-    if (!hasAnyContact) {
-      setError("Podaj telefon lub e-mail.")
-      return
-    }
-    if (!state.consent) {
-      setError("Zaznacz zgodę na przetwarzanie danych.")
+    if (!isValid) {
+      setError("Uzupełnij wymagane pola i zaznacz zgodę.")
       return
     }
 
     setLoading(true)
     try {
-      const res = await fetch("/api/quote-submit", {
+      const res = await fetch("/api/apk-submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(state),
+        body: JSON.stringify({
+          name: state.name,
+          phone: state.phone,
+          email: state.email,
+          product: state.product,
+          message: state.message,
+          consent: state.consent,
+        }),
       })
 
       if (!res.ok) {
-        const j = await res.json().catch(() => ({}))
-        throw new Error(j?.error || "Nie udało się wysłać zapytania.")
+        const txt = await res.text().catch(() => "")
+        throw new Error(txt || "Błąd wysyłki formularza.")
       }
 
-      setSubmitted(true)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Nie udało się wysłać zapytania.")
+      setSuccess(true)
+      setState({
+        name: "",
+        phone: "",
+        email: "",
+        product: prefillProduct || "",
+        message: "",
+        consent: false,
+      })
+    } catch (err: any) {
+      setError(err?.message || "Coś poszło nie tak. Spróbuj ponownie.")
     } finally {
       setLoading(false)
     }
   }
 
-  if (submitted) {
-    return (
-      <div className="text-center py-10">
-        <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <CheckCircle className="h-8 w-8 text-green-600" />
-        </div>
-        <h3 className="text-xl font-bold mb-2">Wysłane</h3>
-        <p className="text-muted-foreground text-pretty">
-          Dzięki. Jeśli podałeś numer telefonu, oddzwonię. Jeśli podałeś e-mail — odpiszę z wyceną lub doprecyzowaniem.
-        </p>
-      </div>
-    )
-  }
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Honeypot (hidden) */}
-      <input
-        type="text"
-        name="website"
-        value={state.website}
-        onChange={(e) => setState((s) => ({ ...s, website: e.target.value }))}
-        className="hidden"
-        tabIndex={-1}
-        autoComplete="off"
-      />
+    <form onSubmit={onSubmit} className="space-y-4">
+      {success && (
+        <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+          Dzięki! Formularz wysłany. Odezwę się najszybciej jak to możliwe.
+        </div>
+      )}
 
-      <div className="space-y-2">
-        <Label htmlFor="insuranceType">Rodzaj ubezpieczenia *</Label>
-        <Select
-          value={state.insuranceType}
-          onValueChange={(v) => setState((s) => ({ ...s, insuranceType: v }))}
-          required
-        >
-          <SelectTrigger id="insuranceType">
-            <SelectValue placeholder="Wybierz rodzaj ubezpieczenia" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="komunikacyjne">Komunikacyjne (OC/AC)</SelectItem>
-            <SelectItem value="mieszkaniowe">Mieszkaniowe</SelectItem>
-            <SelectItem value="zdrowotne">Zdrowotne</SelectItem>
-            <SelectItem value="zyciowe">Na życie</SelectItem>
-            <SelectItem value="turystyczne">Turystyczne</SelectItem>
-            <SelectItem value="firmowe">Firmowe</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="fullName">Imię i nazwisko *</Label>
+      <div className="grid gap-2">
+        <Label htmlFor="name">Imię i nazwisko *</Label>
         <Input
-          id="fullName"
-          value={state.fullName}
-          onChange={(e) => setState((s) => ({ ...s, fullName: e.target.value }))}
-          required
-          placeholder="Mateusz Kowalski"
+          id="name"
+          value={state.name}
+          onChange={(e) => setState((s) => ({ ...s, name: e.target.value }))}
+          placeholder="Np. Jan Kowalski"
+          autoComplete="name"
         />
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="phone">Telefon</Label>
-          <Input
-            id="phone"
-            value={state.phone}
-            onChange={(e) => setState((s) => ({ ...s, phone: e.target.value }))}
-            placeholder="+48 500 387 340"
-            inputMode="tel"
-          />
-          <p className="text-xs text-muted-foreground">Wystarczy telefon lub e-mail. Nie oba.</p>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="email">E-mail</Label>
-          <Input
-            id="email"
-            type="email"
-            value={state.email}
-            onChange={(e) => setState((s) => ({ ...s, email: e.target.value }))}
-            placeholder="jan.kowalski@example.com"
-          />
-        </div>
+      <div className="grid gap-2">
+        <Label htmlFor="phone">Telefon *</Label>
+        <Input
+          id="phone"
+          value={state.phone}
+          onChange={(e) => setState((s) => ({ ...s, phone: e.target.value }))}
+          placeholder="Np. 500 600 700"
+          autoComplete="tel"
+          inputMode="tel"
+        />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="preferredContact">Preferowany kontakt</Label>
-        <Select
-          value={state.preferredContact}
-          onValueChange={(v) => setState((s) => ({ ...s, preferredContact: v }))}
-        >
-          <SelectTrigger id="preferredContact">
-            <SelectValue placeholder="Wybierz" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="telefon">Telefon</SelectItem>
-            <SelectItem value="email">E-mail</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="grid gap-2">
+        <Label htmlFor="email">E-mail</Label>
+        <Input
+          id="email"
+          value={state.email}
+          onChange={(e) => setState((s) => ({ ...s, email: e.target.value }))}
+          placeholder="Np. jan@firma.pl"
+          autoComplete="email"
+          inputMode="email"
+        />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="message">W czym pomóc? (krótko)</Label>
+      <div className="grid gap-2">
+        <Label htmlFor="product">Rodzaj ubezpieczenia *</Label>
+        <Input
+          id="product"
+          value={state.product}
+          onChange={(e) => setState((s) => ({ ...s, product: e.target.value }))}
+          placeholder="Np. OC/AC, mieszkanie, na życie..."
+        />
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="message">Dodatkowe informacje</Label>
         <Textarea
           id="message"
           value={state.message}
           onChange={(e) => setState((s) => ({ ...s, message: e.target.value }))}
+          placeholder="Np. marka/rocznik auta, data końca polisy, zniżki..."
           rows={4}
-          placeholder="Np. OC/AC: mam auto 2020, interesuje mnie OC+AC z szybami i assistance..."
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="details">Szczegóły (opcjonalnie, jeśli masz)</Label>
-        <Textarea
-          id="details"
-          value={state.details}
-          onChange={(e) => setState((s) => ({ ...s, details: e.target.value }))}
-          rows={5}
-          placeholder="Dodatkowe informacje, które mają wpływ na wycenę (miejsce, zakres, suma, historia szkód itp.)."
-        />
-      </div>
-
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2">
         <Checkbox
           id="consent"
           checked={state.consent}
