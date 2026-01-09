@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { QuoteForm } from "@/components/forms/quote-form"
 import { Shield, Clock, CheckCircle2 } from "lucide-react"
@@ -71,9 +72,12 @@ export default function WycenaPage() {
                   Podaj telefon lub e-mail. Jeśli nie masz teraz danych – opisz temat jednym zdaniem.
                 </p>
               </CardHeader>
-              <CardContent>
-                <QuoteForm />
-              </CardContent>
+             <CardContent>
+  <Suspense fallback={<div className="text-sm text-muted-foreground">Ładowanie formularza…</div>}>
+    <QuoteForm />
+  </Suspense>
+</CardContent>
+
             </Card>
 
             <div className="mt-10 grid md:grid-cols-2 gap-6">
