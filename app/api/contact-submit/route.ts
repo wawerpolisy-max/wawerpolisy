@@ -1,106 +1,81 @@
-import { NextResponse } from "next/server"
-import { resend } from "@/lib/resend"
-import { getClientIp, isRateLimited } from "@/lib/antiSpam"
-import { isEmail, normalizePhone, safeString } from "@/lib/validation"
+import { NextResponse } from "next/server";
+import { Resend } from "resend";
 
-const TO_EMAIL = process.env.CONTACT_TO_EMAIL || "wawerpolisy@gmail.com"
-const FROM_EMAIL = process.env.CONTACT_FROM_EMAIL || "WawerPolisy <noreply@wawerpolisy.pl>"
+function safeString(v: unknown, max = 500) {
+  return String(v ?? "").trim().slice(0, max);
+}
 
-export async function POST(request: Request) {
+function isLikelyEmail(v: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+}
+
+export async function POST(req: Request) {
   try {
-    const ip = getClientIp(request)
-    if (isRateLimited({ bucket: "contact", id: ip, windowMs: 60_000, max: 6 })) {
-      return NextResponse.json({ error: "Rate limit" }, { status: 429 })
+    const data = await req.json().catch(() => ({}));
+
+    const name = safeString(data?.name, 120);
+    const phone = safeString(data?.phone, 40);
+    const email = safeString(data?.email, 160);
+    const topic = safeString(data?.topic, 80);
+    const message = safeString(data?.message, 4000);
+    const consent = Boolean(data?.consent);
+
+    if (!name || !message || !consent) {
+      return NextResponse.json(
+        { ok: false, error: "Uzupełnij wymagane pola i zaznacz zgodę RODO." },
+        { status: 400 }
+      );
     }
 
-    const data = await request.json()
-
-    // Honeypot: bots usually fill hidden fields.
-    if (typeof data?.website === "string" && data.website.trim().length > 0) {
-      return NextResponse.json({ success: true })
+    if (!phone && !email) {
+      return NextResponse.json(
+        { ok: false, error: "Podaj telefon lub e-mail (wystarczy jedno)." },
+        { status: 400 }
+      );
     }
 
-    const fullName = safeString(data?.fullName, 120)
-    const email = safeString(data?.email, 200)
-    const phone = normalizePhone(data?.phone)
-    const topic = safeString(data?.topic, 120)
-    const message = safeString(data?.message, 5000)
-    const consent = Boolean(data?.consent)
-
-    if (!fullName || fullName.length < 2) {
-      return NextResponse.json({ error: "Invalid fullName" }, { status: 400 })
+    if (email && !isLikelyEmail(email)) {
+      return NextResponse.json(
+        { ok: false, error: "E-mail wygląda na niepoprawny." },
+        { status: 400 }
+      );
     }
 
-    const hasEmail = isEmail(email)
-    const hasPhone = phone.length >= 7
-    if (!hasEmail && !hasPhone) {
-      return NextResponse.json({ error: "Provide phone or email" }, { status: 400 })
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json(
+        { ok: false, error: "Brak konfiguracji wysyłki e-mail (RESEND_API_KEY)." },
+        { status: 500 }
+      );
     }
 
-    if (!message || message.length < 10) {
-      return NextResponse.json({ error: "Message too short" }, { status: 400 })
-    }
+    const resend = new Resend(apiKey);
 
-    if (!consent) {
-      return NextResponse.json({ error: "Consent required" }, { status: 400 })
-    }
+    const to = process.env.CONTACT_TO_EMAIL || "wawerpolisy@gmail.com";
 
-    const subject = `Kontakt – ${topic || "zapytanie"} – ${fullName}`
-    const text = [
-      "Nowa wiadomość z formularza kontaktowego (wawerpolisy.pl)",
-      "",
-      `Imię i nazwisko: ${fullName}`,
-      `Telefon: ${hasPhone ? phone : "-"}`,
-      `Email: ${hasEmail ? email : "-"}`,
-      `Temat: ${topic || "-"}`,
-      `Zgoda RODO: ${consent ? "TAK" : "NIE"}`,
-      "",
-      "Wiadomość:",
-      message,
-      "",
-      `IP: ${ip}`,
-      `UA: ${request.headers.get("user-agent") || "-"}`,
-      `Czas: ${new Date().toISOString()}`,
-    ].join("\n")
-
-    const sendResult = await resend.emails.send({
-      from: FROM_EMAIL,
-      to: [TO_EMAIL],
-      subject,
-      text,
-      replyTo: hasEmail ? email : undefined,
-    })
-
-    if (sendResult.error) {
-      console.error("[contact-submit] Resend error:", sendResult.error)
-      return NextResponse.json({ error: "Failed to send" }, { status: 502 })
-    }
-
-    // Optional autoresponder to user (only if email provided)
-    if (hasEmail) {
-      const autoText = [
-        `Cześć ${fullName},`,
+    await resend.emails.send({
+      from: "WawerPolisy <onboarding@resend.dev>",
+      to,
+      subject: `Kontakt (${topic || "zapytanie"}) – ${name}`,
+      text: [
+        `Imię i nazwisko: ${name}`,
+        phone ? `Telefon: ${phone}` : "",
+        email ? `E-mail: ${email}` : "",
+        topic ? `Temat: ${topic}` : "",
         "",
-        "Dzięki za wiadomość. Odpowiem najszybciej jak to możliwe.",
-        "",
-        "Jeśli temat jest pilny, możesz też zadzwonić — numer jest na stronie.",
-        "",
-        "Pozdrawiam,",
-        "Mateusz Pawelec",
-        "wawerpolisy.pl",
-      ].join("\n")
+        "Wiadomość:",
+        message,
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    });
 
-      await resend.emails.send({
-        from: FROM_EMAIL,
-        to: [email],
-        subject: "Potwierdzenie kontaktu – wawerpolisy.pl",
-        text: autoText,
-      })
-    }
-
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error("[contact-submit] Error:", error)
-    return NextResponse.json({ error: "Failed to send message" }, { status: 500 })
+    return NextResponse.json({ ok: true });
+  } catch (err: any) {
+    // To się pokaże w UI zamiast “Failed to send”
+    return NextResponse.json(
+      { ok: false, error: safeString(err?.message || "Błąd serwera podczas wysyłki.", 300) },
+      { status: 500 }
+    );
   }
 }
