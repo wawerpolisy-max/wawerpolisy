@@ -1,185 +1,148 @@
 import { NextResponse } from "next/server"
-import { resend } from "@/lib/resend"
-import { getClientIp, isRateLimited } from "@/lib/antiSpam"
-import { isEmail, normalizePhone, safeString } from "@/lib/validation"
+import { Resend } from "resend"
 
-const APK_TO_EMAIL = process.env.APK_TO_EMAIL || "wawerpolisy@gmail.com"
-const APK_FROM_EMAIL = process.env.APK_FROM_EMAIL || "WawerPolisy APK <noreply@wawerpolisy.pl>"
-
-type AnyRecord = Record<string, unknown>
+function safeString(value: unknown, maxLen = 2000) {
+  if (typeof value !== "string") return ""
+  const v = value.trim()
+  if (!v) return ""
+  return v.length > maxLen ? v.slice(0, maxLen) : v
+}
 
 function titleCase(s: string) {
   return s
-    .replace(/_/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .replace(/^\w/, (m) => m.toUpperCase())
+    .split(/[\s-_]+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ")
 }
 
-function line(label: string, value: unknown, max = 400) {
-  const v = safeString(typeof value === "string" ? value : String(value ?? ""), max)
-  return `${label}: ${v || "—"}`
-}
-
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const ip = getClientIp(request)
-    if (isRateLimited({ bucket: "apk", id: ip, windowMs: 60_000, max: 6 })) {
-      return NextResponse.json({ error: "Rate limit" }, { status: 429 })
-    }
+    const data = await req.json()
 
-    const data = (await request.json()) as AnyRecord
+    // Compatibility: accept `insuranceType` as an alias for `selectedInsurance`.
+    const selectedInsurance = safeString(data.selectedInsurance ?? (data as any).insuranceType, 40)
+    const phone = safeString(data.phone, 40)
+    const name = safeString(data.name, 120)
+    const email = safeString(data.email, 120)
 
-    if (typeof data?.website === "string" && String(data.website).trim().length > 0) {
-      return NextResponse.json({ success: true })
-    }
+    const consent1 = Boolean(data.consent1)
+    const consent2 = Boolean(data.consent2)
 
-    const selectedInsurance = safeString(data.selectedInsurance, 40)
-    const fullName = safeString(data.fullName, 120)
-    const email = safeString(data.email, 200)
-    const phone = normalizePhone(data.phone)
-    const contactPreference = safeString(data.contactPreference, 40)
-    const priorities = Array.isArray(data.priorities) ? (data.priorities as unknown[]).map(String) : []
-    const additionalInfo = safeString(data.additionalInfo, 6000)
-
-    const zgodaPrzetwarzanie = Boolean(data.zgodaPrzetwarzanie)
-    const zgodaKlauzula = Boolean(data.zgodaKlauzula)
+    const mieszkanie = data.mieszkanie || {}
+    const samochod = data.samochod || {}
+    const podroze = data.podroze || {}
+    const firmowe = data.firmowe || {}
+    const nnw = data.nnw || {}
 
     if (!selectedInsurance) return NextResponse.json({ error: "Missing selectedInsurance" }, { status: 400 })
-    if (!fullName || fullName.length < 2) return NextResponse.json({ error: "Invalid fullName" }, { status: 400 })
+    if (!phone) return NextResponse.json({ error: "Missing phone" }, { status: 400 })
+    if (!name) return NextResponse.json({ error: "Missing name" }, { status: 400 })
+    if (!consent1 || !consent2) return NextResponse.json({ error: "Consents required" }, { status: 400 })
 
-    const hasEmail = isEmail(email)
-    const hasPhone = phone.length >= 7
-    if (!hasEmail && !hasPhone) return NextResponse.json({ error: "Provide phone or email" }, { status: 400 })
+    const resendKey = process.env.RESEND_API_KEY
+    if (!resendKey) return NextResponse.json({ error: "Missing RESEND_API_KEY" }, { status: 500 })
 
-    if (!zgodaPrzetwarzanie || !zgodaKlauzula) {
-      return NextResponse.json({ error: "Consents required" }, { status: 400 })
-    }
+    const to = process.env.APK_TO_EMAIL || process.env.TO_EMAIL
+    if (!to) return NextResponse.json({ error: "Missing recipient email (APK_TO_EMAIL/TO_EMAIL)" }, { status: 500 })
 
-    const apkNumber = `APK-${Date.now()}-${Math.random().toString(36).slice(2, 9).toUpperCase()}`
-    const currentDate = new Date().toLocaleDateString("pl-PL")
+    const from = process.env.FROM_EMAIL || "onboarding@resend.dev"
 
     const typeLabelMap: Record<string, string> = {
-      mieszkanie: "Ubezpieczenie mieszkaniowe",
-      samochod: "Ubezpieczenie komunikacyjne (OC/AC)",
-      podroze: "Ubezpieczenie turystyczne",
-      firmowe: "Ubezpieczenia firmowe",
+      mieszkanie: "Ubezpieczenie mieszkania / domu",
+      samochod: "Ubezpieczenie samochodu (OC/AC)",
+      podroze: "Ubezpieczenie podróży",
+      firmowe: "Ubezpieczenie firmowe",
       nnw: "Ubezpieczenie NNW",
     }
 
-    const insuranceTypeLabel = typeLabelMap[selectedInsurance] || `Ubezpieczenie – ${selectedInsurance}`
+    const typeLabel = typeLabelMap[selectedInsurance] || `Ubezpieczenie: ${titleCase(selectedInsurance)}`
+    const subject = `[APK] ${typeLabel} — ${name} (${phone})`
 
-    // Per-type details (read from known fields)
-    const sections: string[] = []
+    const lines: string[] = []
+    lines.push("Nowe zgłoszenie APK (formularz):")
+    lines.push("")
+    lines.push(`Rodzaj: ${typeLabel}`)
+    lines.push(`Imię i nazwisko: ${name}`)
+    lines.push(`Telefon: ${phone}`)
+    if (email) lines.push(`E-mail: ${email}`)
+    lines.push("")
+
+    const addSection = (title: string, fields: Record<string, unknown>) => {
+      const entries = Object.entries(fields)
+        .map(([k, v]) => [k, safeString(v, 500)])
+        .filter(([, v]) => Boolean(v))
+
+      if (!entries.length) return
+      lines.push(title)
+      for (const [k, v] of entries) lines.push(`- ${k}: ${v}`)
+      lines.push("")
+    }
 
     if (selectedInsurance === "mieszkanie") {
-      sections.push(
-        "=== MIESZKANIE / DOM ===",
-        line("Lokalizacja", data.mieszkanie_lokalizacja),
-        line("Rodzaj", data.mieszkanie_rodzaj),
-        line("Powierzchnia", data.mieszkanie_powierzchnia),
-        line("Rok budowy", data.mieszkanie_rok),
-        line("Wartość mienia", data.mieszkanie_wartosc),
-        line("Ryzyka / potrzeby", data.mieszkanie_ryzyka, 800),
-      )
+      addSection("Dane mieszkania/domu:", {
+        "Rodzaj nieruchomości": mieszkanie.propertyType,
+        "Miasto": mieszkanie.city,
+        "Metraż (m²)": mieszkanie.area,
+        "Rok budowy": mieszkanie.yearBuilt,
+        "Zakres": mieszkanie.coverage,
+        "Suma ubezpieczenia": mieszkanie.sumInsured,
+        "Uwagi": mieszkanie.notes,
+      })
     }
 
     if (selectedInsurance === "samochod") {
-      sections.push(
-        "=== SAMOCHÓD ===",
-        line("Zakres", data.samochod_zakres),
-        line("Marka / model", data.samochod_marka),
-        line("Rok", data.samochod_rok),
-        line("Moc", data.samochod_moc),
-        line("Użytkowanie", data.samochod_uzytkowanie),
-        line("Szkody", data.samochod_szkody),
-        line("Uwagi", data.samochod_uwagi, 800),
-      )
+      addSection("Dane samochodu:", {
+        "Marka i model": samochod.makeModel,
+        "Rok": samochod.year,
+        "Wartość": samochod.value,
+        "Rodzaj ochrony": samochod.coverage,
+        "Zniżki / szkody": samochod.claims,
+        "Uwagi": samochod.notes,
+      })
     }
 
     if (selectedInsurance === "podroze") {
-      sections.push(
-        "=== PODRÓŻE ===",
-        line("Kierunek", data.podroze_kierunek),
-        line("Termin", data.podroze_termin),
-        line("Liczba osób", data.podroze_osoby),
-        line("Sport / aktywność", data.podroze_sport),
-        line("Choroby przewlekłe", data.podroze_choroby),
-        line("Uwagi", data.podroze_uwagi, 800),
-      )
+      addSection("Dane podróży:", {
+        "Kraj/region": podroze.destination,
+        "Termin": podroze.dates,
+        "Liczba osób": podroze.people,
+        "Sporty/ryzyka": podroze.risks,
+        "Uwagi": podroze.notes,
+      })
     }
 
     if (selectedInsurance === "firmowe") {
-      sections.push(
-        "=== FIRMA ===",
-        line("Nazwa firmy", data.firmowe_nazwa),
-        line("NIP", data.firmowe_nip),
-        line("Zakres", data.firmowe_zakres),
-        line("Skala działalności", data.firmowe_skala),
-        line("Opis / potrzeby", data.firmowe_opis, 1200),
-      )
+      addSection("Dane firmy:", {
+        "Branża": firmowe.industry,
+        "Zakres": firmowe.coverage,
+        "Liczba pracowników": firmowe.employees,
+        "Uwagi": firmowe.notes,
+      })
     }
 
     if (selectedInsurance === "nnw") {
-      sections.push(
-        "=== NNW ===",
-        line("Typ", data.nnw_typ),
-        line("Dzieci", data.nnw_dzieci),
-        line("Szkoła", data.nnw_szkola),
-        line("Sport", data.nnw_sport),
-        line("Zawód", data.nnw_zawod),
-        line("Suma ubezpieczenia", data.nnw_suma),
-        line("Sport zawodowy", data.nnw_sport_zawodowy),
-        line("Uwagi", data.nnw_uwagi, 1200),
-      )
+      addSection("Dane NNW:", {
+        "Kogo dotyczy": nnw.person,
+        "Zakres": nnw.coverage,
+        "Suma": nnw.sumInsured,
+        "Uwagi": nnw.notes,
+      })
     }
 
-    const text = [
-      "NOWY WNIOSEK APK (wawerpolisy.pl)",
-      "",
-      `Nr APK: ${apkNumber}`,
-      `Data: ${currentDate}`,
-      `Rodzaj: ${insuranceTypeLabel}`,
-      "",
-      "=== DANE KONTAKTOWE ===",
-      line("Imię i nazwisko", fullName),
-      line("Telefon", hasPhone ? phone : "—"),
-      line("Email", hasEmail ? email : "—"),
-      line("Preferowany kontakt", contactPreference),
-      priorities.length ? `Priorytety: ${priorities.join(", ")}` : "Priorytety: —",
-      "",
-      "=== DODATKOWE INFORMACJE ===",
-      additionalInfo || "—",
-      "",
-      ...sections,
-      "",
-      "=== ZGODY ===",
-      `Zgoda na przetwarzanie danych: ${zgodaPrzetwarzanie ? "TAK" : "NIE"}`,
-      `Potwierdzenie klauzuli informacyjnej: ${zgodaKlauzula ? "TAK" : "NIE"}`,
-      "",
-      `IP: ${ip}`,
-      `UA: ${request.headers.get("user-agent") || "-"}`,
-      `Czas: ${new Date().toISOString()}`,
-    ].join("\n")
+    lines.push("Zgody: TAK (consent1 + consent2)")
+    const text = lines.join("\n")
 
-    const subject = `APK ${apkNumber} – ${fullName} – ${titleCase(selectedInsurance)} – ${currentDate}`
-
-    const sendResult = await resend.emails.send({
-      from: APK_FROM_EMAIL,
-      to: [APK_TO_EMAIL], // requested: APK always goes to wawerpolisy@gmail.com
+    const resend = new Resend(resendKey)
+    await resend.emails.send({
+      from,
+      to,
       subject,
       text,
-      replyTo: hasEmail ? email : undefined,
     })
 
-    if (sendResult.error) {
-      console.error("[apk-submit] Resend error:", sendResult.error)
-      return NextResponse.json({ error: "Failed to send APK" }, { status: 502 })
-    }
-
-    return NextResponse.json({ success: true, apkNumber })
-  } catch (error) {
-    console.error("[apk-submit] Error:", error)
-    return NextResponse.json({ error: "Failed to send APK" }, { status: 500 })
+    return NextResponse.json({ ok: true })
+  } catch (err: any) {
+    return NextResponse.json({ error: err?.message || "Server error" }, { status: 500 })
   }
 }
