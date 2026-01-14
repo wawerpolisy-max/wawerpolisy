@@ -1,7 +1,7 @@
+// components/forms/quote-form.tsx
 "use client"
 
 import * as React from "react"
-import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -10,8 +10,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import Link from "next/link"
 
-function mapTypParam(param: string | null) {
-  // map query param "typ" to internal insurance types
+export type QuoteType =
+  | ""
+  | "komunikacyjne"
+  | "mieszkaniowe"
+  | "zdrowotne"
+  | "firmowe"
+  | "turystyczne"
+  | "zyciowe"
+
+export function mapTypParam(param: string | undefined | null): QuoteType {
   switch ((param || "").toLowerCase()) {
     case "oc":
     case "ac":
@@ -40,15 +48,12 @@ function mapTypParam(param: string | null) {
   }
 }
 
-export function QuoteForm() {
-  const params = useSearchParams()
-  const defaultType = mapTypParam(params.get("typ"))
-
+export function QuoteForm(props: { defaultType?: QuoteType }) {
   const [state, setState] = React.useState({
     fullName: "",
     phone: "",
     email: "",
-    insuranceType: defaultType,
+    insuranceType: props.defaultType || ("" as QuoteType),
     message: "",
     consent: false,
   })
@@ -57,9 +62,7 @@ export function QuoteForm() {
   const [success, setSuccess] = React.useState<string | null>(null)
   const [error, setError] = React.useState<string | null>(null)
 
-  const setField = (key: keyof typeof state, value: any) => {
-    setState((s) => ({ ...s, [key]: value }))
-  }
+  const setField = (key: keyof typeof state, value: any) => setState((s) => ({ ...s, [key]: value }))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -68,8 +71,6 @@ export function QuoteForm() {
     setLoading(true)
 
     try {
-      // Compatibility: some backends / older deployments may expect `selectedInsurance`.
-      // We map our quote insurance types to the closest APK-style labels.
       const selectedInsurance = (() => {
         switch (state.insuranceType) {
           case "komunikacyjne":
@@ -92,27 +93,14 @@ export function QuoteForm() {
       const res = await fetch("/api/quote-submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...state,
-          // send both, so either endpoint can understand it
-          selectedInsurance,
-        }),
+        body: JSON.stringify({ ...state, selectedInsurance }),
       })
 
-      const j = await res.json()
-      if (!res.ok) {
-        throw new Error(j?.error ? String(j.error) : JSON.stringify(j))
-      }
+      const j = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(j?.error ? String(j.error) : "Błąd wysyłki formularza.")
 
       setSuccess("Dziękuję! Wrócę do Ciebie z propozycją.")
-      setState((s) => ({
-        ...s,
-        fullName: "",
-        phone: "",
-        email: "",
-        message: "",
-        consent: false,
-      }))
+      setState((s) => ({ ...s, fullName: "", phone: "", email: "", message: "", consent: false }))
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -121,50 +109,32 @@ export function QuoteForm() {
   }
 
   return (
-    <Card className="w-full">
+    <Card>
       <CardHeader>
         <CardTitle>Formularz wyceny</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="fullName">Imię i nazwisko *</Label>
-            <Input
-              id="fullName"
-              value={state.fullName}
-              onChange={(e) => setField("fullName", e.target.value)}
-              placeholder="Jan Kowalski"
-              required
-            />
+          <div>
+            <Label>Imię i nazwisko *</Label>
+            <Input value={state.fullName} onChange={(e) => setField("fullName", e.target.value)} required />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="phone">Telefon *</Label>
-            <Input
-              id="phone"
-              value={state.phone}
-              onChange={(e) => setField("phone", e.target.value)}
-              placeholder="+48..."
-              required
-            />
+          <div>
+            <Label>Telefon *</Label>
+            <Input value={state.phone} onChange={(e) => setField("phone", e.target.value)} required />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">E-mail</Label>
-            <Input
-              id="email"
-              type="email"
-              value={state.email}
-              onChange={(e) => setField("email", e.target.value)}
-              placeholder="email@domena.pl"
-            />
+          <div>
+            <Label>E-mail</Label>
+            <Input value={state.email} onChange={(e) => setField("email", e.target.value)} />
           </div>
 
-          <div className="space-y-2">
+          <div>
             <Label>Rodzaj ubezpieczenia *</Label>
-            <Select value={state.insuranceType} onValueChange={(v) => setField("insuranceType", v)}>
+            <Select value={state.insuranceType} onValueChange={(v) => setField("insuranceType", v as QuoteType)}>
               <SelectTrigger>
-                <SelectValue placeholder="Wybierz" />
+                <SelectValue placeholder="Wybierz..." />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="komunikacyjne">OC/AC</SelectItem>
@@ -177,15 +147,9 @@ export function QuoteForm() {
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="message">Dodatkowe informacje</Label>
-            <Textarea
-              id="message"
-              value={state.message}
-              onChange={(e) => setField("message", e.target.value)}
-              placeholder="Np. marka, rocznik, przebieg, obecna polisa..."
-              rows={4}
-            />
+          <div>
+            <Label>Dodatkowe informacje</Label>
+            <Textarea value={state.message} onChange={(e) => setField("message", e.target.value)} rows={4} />
           </div>
 
           <div className="flex items-start gap-2">
@@ -199,8 +163,14 @@ export function QuoteForm() {
             />
             <Label htmlFor="consent" className="text-sm leading-relaxed">
               Wyrażam zgodę na przetwarzanie danych w celu kontaktu i przygotowania oferty. Szczegóły w{" "}
-              <Link className="underline" href="/rodo">RODO</Link> i{" "}
-              <Link className="underline" href="/privacy">polityce prywatności</Link>.
+              <Link className="underline" href="/rodo">
+                RODO
+              </Link>{" "}
+              i{" "}
+              <Link className="underline" href="/polityka-prywatnosci">
+                polityce prywatności
+              </Link>
+              .
             </Label>
           </div>
 
