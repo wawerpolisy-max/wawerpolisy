@@ -90,7 +90,7 @@ export default function HomePage() {
               Kilkuletnie doświadczenie w branży ubezpieczeniowej.
             </p>
             <p className="text-xl text-sky-100 text-pretty animate-fade-in delay-400">
-              Pomagamy znaleźć najlepsze rozwiązania dopasowane do Twoich potrzeb.
+              Pomagam znaleźć najlepsze rozwiązania dopasowane do Twoich potrzeb.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in delay-600">
               <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold">
@@ -108,9 +108,9 @@ export default function HomePage() {
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Nasze usługi ubezpieczeniowe</h2>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Moje usługi ubezpieczeniowe</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-pretty">
-              Oferujemy pełen zakres ubezpieczeń dostosowanych do potrzeb indywidualnych i firmowych
+              Oferuję pełen zakres ubezpieczeń dostosowanych do potrzeb indywidualnych i firmowych
             </p>
           </div>
 
@@ -159,7 +159,7 @@ export default function HomePage() {
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Dlaczego warto wybrać nas?</h2>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Dlaczego warto mnie wybrać?</h2>
             <p className="text-xl text-muted-foreground text-pretty">
               Profesjonalne doradztwo i obsługa na najwyższym poziomie
             </p>
@@ -263,8 +263,8 @@ export default function HomePage() {
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Opinie naszych klientów</h2>
-            <p className="text-xl text-muted-foreground text-pretty">Zaufało nam już setki zadowolonych klientów</p>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Opinie moich klientów</h2>
+            <p className="text-xl text-muted-foreground text-pretty">Zaufało mi już setki zadowolonych klientów</p>
           </div>
 
           <div className="relative overflow-hidden">
@@ -311,7 +311,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl lg:text-4xl font-bold mb-6 text-balance">Gotowy na pełną ochronę?</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto text-pretty">
-            Skontaktuj się z nami już dziś i otrzymaj bezpłatną wycenę dopasowaną do Twoich potrzeb
+            Skontaktuj się ze mną już dziś i otrzymaj bezpłatną wycenę dopasowaną do Twoich potrzeb
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold">
