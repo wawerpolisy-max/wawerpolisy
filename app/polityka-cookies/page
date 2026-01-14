@@ -1,114 +1,122 @@
-import type { Metadata } from 'next';
+// app/polityka-cookies/page.tsx
+import type { Metadata } from "next"
+import Link from "next/link"
 
 export const metadata: Metadata = {
-  title: 'Polityka cookies | Wawer Polisy',
-  description: 'Informacje o plikach cookies i podobnych technologiach oraz zarządzaniu zgodą.',
-};
+  title: "Polityka cookies | wawerpolisy.pl",
+  description:
+    "Informacje o plikach cookies i podobnych technologiach, celach ich użycia oraz sposobach zarządzania zgodą.",
+}
 
-export default function CookiesPolicyPage() {
+export default function PolitykaCookiesPage() {
+  const updatedAt = "2026-01-13"
+
   return (
-    <main className="mx-auto max-w-4xl px-4 py-10 prose">
-      <h1>Polityka cookies</h1>
-
-      <p>
-        Ta strona wyjaśnia, czym są pliki cookies, jak ich używam oraz jak możesz zarządzać zgodą.
-        Zgodnie z zasadami prywatności i regulacjami dotyczącymi cookies, zgoda jest wymagana dla cookies innych niż niezbędne,
-        a wycofanie zgody musi być równie proste jak jej udzielenie.
+    <main className="mx-auto max-w-3xl px-4 py-12">
+      <h1 className="text-3xl font-bold tracking-tight">Polityka cookies</h1>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Ostatnia aktualizacja: {updatedAt}
       </p>
 
-      <h2>Czym są cookies</h2>
-      <p>
-        Cookies (ciasteczka) to małe pliki tekstowe zapisywane na Twoim urządzeniu podczas korzystania ze strony.
-        Mogą być wykorzystywane m.in. do zapewnienia działania serwisu, zapamiętywania preferencji oraz – za zgodą – do analityki i marketingu.
-      </p>
+      <section className="mt-8 space-y-4">
+        <h2 className="text-xl font-semibold">1. Co to są pliki cookies</h2>
+        <p>
+          Cookies to małe pliki tekstowe zapisywane na Twoim urządzeniu (komputer/telefon)
+          podczas korzystania ze strony. Używa się ich m.in. do poprawnego działania serwisu,
+          zapamiętywania ustawień oraz – jeśli wyrazisz zgodę – do analityki i marketingu.
+        </p>
+      </section>
 
-      <h2>Jakich kategorii cookies używam</h2>
+      <section className="mt-8 space-y-4">
+        <h2 className="text-xl font-semibold">2. Jakich technologii używamy</h2>
+        <p>
+          Poza cookies możemy stosować podobne technologie (np. localStorage) do przechowywania
+          ustawień (np. Twoich preferencji dot. zgód).
+        </p>
+      </section>
 
-      <h3>1) Niezbędne</h3>
-      <ul>
-        <li>Cel: zapewnienie działania strony i bezpieczeństwa.</li>
-        <li>Zgoda: nie jest wymagana (bez nich strona nie działa poprawnie).</li>
-      </ul>
+      <section className="mt-8 space-y-4">
+        <h2 className="text-xl font-semibold">3. Kategorie cookies i cele</h2>
 
-      <h3>2) Funkcjonalne</h3>
-      <ul>
-        <li>Cel: zapamiętywanie ustawień i preferencji.</li>
-        <li>Zgoda: wymagana.</li>
-      </ul>
+        <div className="space-y-3">
+          <div>
+            <p className="font-medium">Niezbędne</p>
+            <p className="text-sm text-muted-foreground">
+              Zapewniają działanie strony i podstawowe bezpieczeństwo. Tych cookies nie da się
+              wyłączyć, bo bez nich serwis nie będzie działać poprawnie.
+            </p>
+          </div>
 
-      <h3>3) Analityczne</h3>
-      <ul>
-        <li>Cel: statystyki odwiedzin i ulepszanie serwisu (np. pomiar ruchu).</li>
-        <li>Zgoda: wymagana. Bez zgody nie uruchamiam analityki.</li>
-      </ul>
+          <div>
+            <p className="font-medium">Funkcjonalne</p>
+            <p className="text-sm text-muted-foreground">
+              Zapamiętują wybory użytkownika (np. preferencje). Włączane wyłącznie po Twojej zgodzie.
+            </p>
+          </div>
 
-      <h3>4) Marketingowe</h3>
-      <ul>
-        <li>Cel: reklamy, remarketing i pomiar skuteczności kampanii.</li>
-        <li>Zgoda: wymagana. Bez zgody nie uruchamiam marketingowych trackerów.</li>
-      </ul>
+          <div>
+            <p className="font-medium">Analityczne</p>
+            <p className="text-sm text-muted-foreground">
+              Pomagają zrozumieć, jak użytkownicy korzystają ze strony (statystyki). Włączane tylko po zgodzie.
+              Przykłady narzędzi: Google Analytics lub alternatywy.
+            </p>
+          </div>
 
-      <h2>Zarządzanie zgodą</h2>
-      <p>
-        Możesz:
-      </p>
-      <ul>
-        <li>zaakceptować wszystkie cookies,</li>
-        <li>odrzucić cookies inne niż niezbędne,</li>
-        <li>dostosować ustawienia dla poszczególnych kategorii,</li>
-        <li>wycofać zgodę w dowolnym momencie.</li>
-      </ul>
+          <div>
+            <p className="font-medium">Marketingowe</p>
+            <p className="text-sm text-muted-foreground">
+              Służą do działań marketingowych (np. piksel reklamowy, osadzenia z social media). Włączane tylko po zgodzie.
+            </p>
+          </div>
+        </div>
+      </section>
 
-      <p>
-        Aby ponownie wyświetlić okno zgody, użyj przycisku poniżej.
-      </p>
+      <section className="mt-8 space-y-4">
+        <h2 className="text-xl font-semibold">4. Zgoda na cookies</h2>
+        <p>
+          Zgodę na cookies inne niż niezbędne wyrażasz dobrowolnie poprzez baner zgód. Zgodę możesz
+          w każdej chwili wycofać lub zmienić (np. otwierając ustawienia cookies).
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Wymóg uzyskania zgody na nie-niezbędne cookies wynika z art. 5(3) Dyrektywy ePrivacy
+          oraz zasad zgody z RODO (zgoda ma być dobrowolna, konkretna, świadoma i jednoznaczna). :contentReference[oaicite:3]{index=3}
+        </p>
+      </section>
 
-      <ClientResetConsentButton />
+      <section className="mt-8 space-y-4">
+        <h2 className="text-xl font-semibold">5. Jak zarządzać cookies w przeglądarce</h2>
+        <p>
+          Możesz też usuwać cookies lub blokować je w ustawieniach przeglądarki. Pamiętaj, że
+          zablokowanie cookies niezbędnych może spowodować nieprawidłowe działanie strony.
+        </p>
+      </section>
 
-      <h2>Jak usunąć cookies w przeglądarce</h2>
-      <p>
-        Możesz też usuwać cookies i blokować je w ustawieniach przeglądarki. Pamiętaj: zablokowanie cookies niezbędnych może spowodować,
-        że strona nie będzie działać prawidłowo.
-      </p>
+      <section className="mt-8 space-y-4">
+        <h2 className="text-xl font-semibold">6. Kontakt i dane administratora</h2>
+        <p>
+          W sprawach związanych z prywatnością skontaktujesz się przez stronę{" "}
+          <Link className="underline underline-offset-2" href="/kontakt">
+            Kontakt
+          </Link>{" "}
+          lub e-mail podany w stopce serwisu.
+        </p>
+        <p>
+          Zobacz też:{" "}
+          <Link className="underline underline-offset-2" href="/polityka-prywatnosci">
+            Polityka prywatności
+          </Link>{" "}
+          oraz{" "}
+          <Link className="underline underline-offset-2" href="/rodo">
+            RODO
+          </Link>
+          .
+        </p>
+      </section>
 
-      <h2>Kontakt</h2>
-      <p>
-        Jeśli masz pytania o prywatność lub cookies, przejdź do zakładki Kontakt.
-      </p>
+      <section className="mt-10 rounded-lg border p-4 text-sm text-muted-foreground">
+        To jest praktyczna polityka cookies do serwisu informacyjno-usługowego. Jeśli wdrożysz konkretne trackery
+        (GA/Pixel/Hotjar/Instagram embed jako „blog”), dopisz je wprost w treści (nazwa, cel, dostawca).
+      </section>
     </main>
-  );
-}
-
-// Client component w tym samym pliku (Next na to pozwala, ale musi mieć 'use client' osobno)
-function ClientResetConsentButton() {
-  return (
-    <div style={{ marginTop: 12 }}>
-      <ResetConsentButton />
-    </div>
-  );
-}
-
-function ResetConsentButton() {
-  return (
-    <>
-      {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-      <button
-        type="button"
-        onClick={() => {
-          localStorage.removeItem('wp_cookie_consent');
-          window.dispatchEvent(new CustomEvent('cookie-consent-updated'));
-          window.location.reload();
-        }}
-        style={{
-          border: '1px solid #111',
-          borderRadius: 8,
-          padding: '10px 14px',
-          cursor: 'pointer',
-          background: 'white',
-        }}
-      >
-        Wycofaj zgodę i pokaż okno cookies
-      </button>
-    </>
-  );
+  )
 }
