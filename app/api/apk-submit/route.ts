@@ -205,3 +205,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: msg }, { status: 500 })
   }
 }
+Fix APK API to use fullName & zgodaPrzetwarzanie
