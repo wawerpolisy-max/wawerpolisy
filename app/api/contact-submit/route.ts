@@ -1,81 +1,80 @@
-import { NextResponse } from "next/server";
-import { Resend } from "resend";
+// app/api/contact-submit/route.ts
+import { NextResponse } from "next/server"
+import { z } from "zod"
+import { Resend } from "resend"
 
-function safeString(v: unknown, max = 500) {
-  return String(v ?? "").trim().slice(0, max);
-}
+const resend = new Resend(process.env.RESEND_API_KEY)
 
-function isLikelyEmail(v: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-}
+const Schema = z.object({
+  fullName: z.string().min(2),
+  phone: z.string().optional().default(""),
+  email: z.string().optional().default(""),
+  topic: z.string().min(2),
+  message: z.string().min(10),
+  consent: z.boolean(),
+  website: z.string().optional().default(""), // honeypot
+})
 
 export async function POST(req: Request) {
   try {
-    const data = await req.json().catch(() => ({}));
+    const json = await req.json().catch(() => null)
+    const parsed = Schema.safeParse(json)
 
-    const name = safeString(data?.name, 120);
-    const phone = safeString(data?.phone, 40);
-    const email = safeString(data?.email, 160);
-    const topic = safeString(data?.topic, 80);
-    const message = safeString(data?.message, 4000);
-    const consent = Boolean(data?.consent);
-
-    if (!name || !message || !consent) {
-      return NextResponse.json(
-        { ok: false, error: "Uzupełnij wymagane pola i zaznacz zgodę RODO." },
-        { status: 400 }
-      );
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Uzupełnij wymagane pola." }, { status: 400 })
     }
 
-    if (!phone && !email) {
-      return NextResponse.json(
-        { ok: false, error: "Podaj telefon lub e-mail (wystarczy jedno)." },
-        { status: 400 }
-      );
+    const data = parsed.data
+
+    // Honeypot: jeśli bot wypełnił ukryte pole -> udaj sukces i nie wysyłaj maila
+    if (data.website && data.website.trim().length > 0) {
+      return NextResponse.json({ ok: true }, { status: 200 })
     }
 
-    if (email && !isLikelyEmail(email)) {
-      return NextResponse.json(
-        { ok: false, error: "E-mail wygląda na niepoprawny." },
-        { status: 400 }
-      );
+    const hasAnyContact =
+      (data.phone && data.phone.trim().length >= 7) || (data.email && data.email.includes("@"))
+
+    if (!hasAnyContact) {
+      return NextResponse.json({ error: "Podaj telefon lub e-mail." }, { status: 400 })
     }
 
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
+    if (!data.consent) {
+      return NextResponse.json({ error: "Zaznacz zgodę na przetwarzanie danych." }, { status: 400 })
+    }
+
+    const to = process.env.CONTACT_TO
+    const from = process.env.CONTACT_FROM
+
+    if (!to || !from || !process.env.RESEND_API_KEY) {
       return NextResponse.json(
-        { ok: false, error: "Brak konfiguracji wysyłki e-mail (RESEND_API_KEY)." },
+        { error: "Brak konfiguracji wysyłki (ENV) po stronie serwera." },
         { status: 500 }
-      );
+      )
     }
 
-    const resend = new Resend(apiKey);
-
-    const to = process.env.CONTACT_TO_EMAIL || "wawerpolisy@gmail.com";
+    const subject = `[Kontakt] ${data.topic} — ${data.fullName}`
+    const text = [
+      `Imię i nazwisko: ${data.fullName}`,
+      `Telefon: ${data.phone || "-"}`,
+      `E-mail: ${data.email || "-"}`,
+      `Temat: ${data.topic}`,
+      "",
+      "Wiadomość:",
+      data.message,
+      "",
+      `Zgoda: ${data.consent ? "TAK" : "NIE"}`,
+    ].join("\n")
 
     await resend.emails.send({
-      from: "WawerPolisy <onboarding@resend.dev>",
+      from,
       to,
-      subject: `Kontakt (${topic || "zapytanie"}) – ${name}`,
-      text: [
-        `Imię i nazwisko: ${name}`,
-        phone ? `Telefon: ${phone}` : "",
-        email ? `E-mail: ${email}` : "",
-        topic ? `Temat: ${topic}` : "",
-        "",
-        "Wiadomość:",
-        message,
-      ]
-        .filter(Boolean)
-        .join("\n"),
-    });
+      subject,
+      text,
+      replyTo: data.email && data.email.includes("@") ? data.email : undefined,
+    })
 
-    return NextResponse.json({ ok: true });
-  } catch (err: any) {
-    // To się pokaże w UI zamiast “Failed to send”
-    return NextResponse.json(
-      { ok: false, error: safeString(err?.message || "Błąd serwera podczas wysyłki.", 300) },
-      { status: 500 }
-    );
+    return NextResponse.json({ ok: true }, { status: 200 })
+  } catch (e) {
+    return NextResponse.json({ error: "Błąd serwera podczas wysyłki." }, { status: 500 })
   }
 }
