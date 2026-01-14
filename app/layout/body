@@ -1,0 +1,12 @@
+import CookieConsent from '@/components/CookieConsent';
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="pl">
+      <body>
+        {children}
+        <CookieConsent />
+      </body>
+    </html>
+  );
+}
