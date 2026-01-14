@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  serverExternalPackages: ['prettier', 'standalone'],
   async headers() {
     // CSP: zaczynamy od REPORT-ONLY, żeby niczego nie zablokować i nie zepsuć.
     // Gdy zobaczysz, co raportuje, można przejść na twarde CSP (albo nonce).

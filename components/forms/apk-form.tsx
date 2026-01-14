@@ -119,7 +119,7 @@ export function APKForm() {
 
   const nextStep = () => {
     if (currentStep < 4) {
-      setCurrentStep(currentStep + 1)
+      setCurrentStep((currentStep + 1) as Step)
       setTimeout(() => {
         stepIndicatorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
       }, 50)
