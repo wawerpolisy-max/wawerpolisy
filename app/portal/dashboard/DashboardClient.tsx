@@ -87,7 +87,6 @@ export default function DashboardClient() {
               <span className="text-sm font-medium text-muted-foreground">Panel Klienta</span>
             </Link>
             <div className="flex items-center gap-4">
-              <span className="text-sm font-medium">Jan Kowalski</span>
               <Button variant="outline" size="sm" asChild>
                 <Link href="/portal/login">Wyloguj</Link>
               </Button>
@@ -99,7 +98,7 @@ export default function DashboardClient() {
       <div className="container mx-auto px-4 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Witaj, Jan!</h1>
+          <h1 className="text-3xl font-bold mb-2">Witaj!</h1>
           <p className="text-muted-foreground">Zarządzaj swoimi ubezpieczeniami i dokumentami</p>
         </div>
 
