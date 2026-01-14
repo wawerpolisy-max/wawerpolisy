@@ -85,7 +85,7 @@ export function Chatbot() {
           {/* Header */}
           <div className="bg-primary text-white p-4 rounded-t-lg flex justify-between items-center">
             <div>
-              <h3 className="font-bold text-lg">Asystent UW</h3>
+              <h3 className="font-bold text-lg">Asystent</h3>
               <p className="text-xs text-sky-100">Online - Odpowiem w kilka sekund</p>
             </div>
             <Button
