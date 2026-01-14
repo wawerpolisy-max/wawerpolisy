@@ -59,169 +59,8 @@ function daysUntilExpiration(expiryDate: string): number {
 }
 
 export default function DashboardClient() {
-  const policies: Policy[] = [
-    {
-      id: 1,
-      category: "Komunikacyjne",
-      type: "OC/AC Pojazdu",
-      policyNumber: "POL/2025/001234",
-      vehicle: "Toyota Corolla",
-      validFrom: "2025-03-15",
-      validUntil: "2026-03-15",
-      status: "active",
-      premium: "1,200 zł",
-      paymentConfirmed: true,
-      documents: {
-        policy: true,
-        owu: true,
-        payment: true,
-      },
-      notifications: {
-        enabled: true,
-        email: "jan.kowalski@example.com",
-        notify30Days: true,
-        notify7Days: true,
-      },
-    },
-    {
-      id: 2,
-      category: "Komunikacyjne",
-      type: "OC Motocykl",
-      policyNumber: "POL/2025/001567",
-      vehicle: "Honda CB500",
-      validFrom: "2025-04-01",
-      validUntil: "2026-04-01",
-      status: "active",
-      premium: "680 zł",
-      paymentConfirmed: true,
-      documents: {
-        policy: true,
-        owu: true,
-        payment: true,
-      },
-      notifications: {
-        enabled: false,
-        email: "jan.kowalski@example.com",
-        notify30Days: true,
-        notify7Days: true,
-      },
-    },
-    {
-      id: 3,
-      category: "Mieszkaniowe",
-      type: "Ubezpieczenie Mieszkania",
-      policyNumber: "POL/2025/005678",
-      property: "Mieszkanie 65m²",
-      validFrom: "2024-12-01",
-      validUntil: "2025-12-01",
-      status: "active",
-      premium: "450 zł",
-      paymentConfirmed: true,
-      documents: {
-        policy: true,
-        owu: true,
-        payment: true,
-      },
-      notifications: {
-        enabled: true,
-        email: "jan.kowalski@example.com",
-        notify30Days: true,
-        notify7Days: true,
-      },
-    },
-    {
-      id: 4,
-      category: "Turystyczne",
-      type: "Ubezpieczenie Podróżne Europa",
-      policyNumber: "POL/2025/007890",
-      property: "Pakiet Rodzinny",
-      validFrom: "2025-06-15",
-      validUntil: "2025-07-15",
-      status: "active",
-      premium: "180 zł",
-      paymentConfirmed: true,
-      documents: {
-        policy: true,
-        owu: false,
-        payment: true,
-      },
-      notifications: {
-        enabled: false,
-        email: "jan.kowalski@example.com",
-        notify30Days: true,
-        notify7Days: false,
-      },
-    },
-    {
-      id: 5,
-      category: "Firmowe",
-      type: "OC Działalności",
-      policyNumber: "POL/2025/008123",
-      property: "Firma XYZ Sp. z o.o.",
-      validFrom: "2025-01-01",
-      validUntil: "2026-01-01",
-      status: "active",
-      premium: "3,200 zł",
-      paymentConfirmed: true,
-      documents: {
-        policy: true,
-        owu: true,
-        payment: true,
-      },
-      notifications: {
-        enabled: true,
-        email: "jan.kowalski@example.com",
-        notify30Days: true,
-        notify7Days: true,
-      },
-    },
-    {
-      id: 6,
-      category: "Zdrowotne",
-      type: "Pakiet Medyczny",
-      policyNumber: "POL/2025/009012",
-      property: "Pakiet Rodzinny",
-      validFrom: "2025-01-01",
-      validUntil: "2026-01-01",
-      status: "active",
-      premium: "2,400 zł",
-      paymentConfirmed: false,
-      documents: {
-        policy: true,
-        owu: false,
-        payment: false,
-      },
-      notifications: {
-        enabled: false,
-        email: "jan.kowalski@example.com",
-        notify30Days: true,
-        notify7Days: true,
-      },
-    },
-    {
-      id: 7,
-      category: "Na Życie",
-      type: "Ubezpieczenie na Życie",
-      policyNumber: "POL/2025/009876",
-      property: "Ochrona Rodziny",
-      validFrom: "2024-08-01",
-      validUntil: "2034-08-01",
-      status: "active",
-      premium: "1,800 zł",
-      paymentConfirmed: true,
-      documents: {
-        policy: true,
-        owu: true,
-        payment: true,
-      },
-      notifications: {
-        enabled: true,
-        email: "jan.kowalski@example.com",
-        notify30Days: true,
-        notify7Days: true,
-      },
-    },
-  ]
+  // Empty policies array - users need to add their own policies
+  const policies: Policy[] = []
 
   const categories = ["Komunikacyjne", "Mieszkaniowe", "Turystyczne", "Firmowe", "Zdrowotne", "Na Życie"]
   const categorizedPolicies: Record<string, Policy[]> = {}
@@ -582,26 +421,18 @@ export default function DashboardClient() {
                 <CardTitle>Ostatnia Aktywność</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex gap-4">
-                    <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <FileText className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium">Polisa przedłużona</p>
-                      <p className="text-sm text-muted-foreground">OC/AC Pojazdu - 15 stycznia 2026</p>
+                {policies.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p className="text-sm">Brak aktywności</p>
+                    <p className="text-xs mt-2">Dodaj swoją pierwszą polisę, aby rozpocząć</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p className="text-sm">Brak ostatniej aktywności</p>
                     </div>
                   </div>
-                  <div className="flex gap-4">
-                    <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <CreditCard className="h-5 w-5 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium">Płatność zrealizowana</p>
-                      <p className="text-sm text-muted-foreground">Składka ubezpieczenia - 10 stycznia 2026</p>
-                    </div>
-                  </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -617,12 +448,16 @@ export default function DashboardClient() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                  <p className="font-medium text-sm mb-1">Zbliża się termin przedłużenia</p>
-                  <p className="text-xs text-muted-foreground">
-                    Twoja polisa mieszkaniowa wygasa za 2 miesiące. Skontaktuj się z nami.
-                  </p>
-                </div>
+                {policies.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p className="text-sm">Brak powiadomień</p>
+                    <p className="text-xs mt-2">Dodaj polisy, aby otrzymywać powiadomienia o terminach</p>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p className="text-sm">Brak nowych powiadomień</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
