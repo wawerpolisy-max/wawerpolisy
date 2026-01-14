@@ -1,0 +1,114 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Polityka cookies | Wawer Polisy',
+  description: 'Informacje o plikach cookies i podobnych technologiach oraz zarządzaniu zgodą.',
+};
+
+export default function CookiesPolicyPage() {
+  return (
+    <main className="mx-auto max-w-4xl px-4 py-10 prose">
+      <h1>Polityka cookies</h1>
+
+      <p>
+        Ta strona wyjaśnia, czym są pliki cookies, jak ich używam oraz jak możesz zarządzać zgodą.
+        Zgodnie z zasadami prywatności i regulacjami dotyczącymi cookies, zgoda jest wymagana dla cookies innych niż niezbędne,
+        a wycofanie zgody musi być równie proste jak jej udzielenie.
+      </p>
+
+      <h2>Czym są cookies</h2>
+      <p>
+        Cookies (ciasteczka) to małe pliki tekstowe zapisywane na Twoim urządzeniu podczas korzystania ze strony.
+        Mogą być wykorzystywane m.in. do zapewnienia działania serwisu, zapamiętywania preferencji oraz – za zgodą – do analityki i marketingu.
+      </p>
+
+      <h2>Jakich kategorii cookies używam</h2>
+
+      <h3>1) Niezbędne</h3>
+      <ul>
+        <li>Cel: zapewnienie działania strony i bezpieczeństwa.</li>
+        <li>Zgoda: nie jest wymagana (bez nich strona nie działa poprawnie).</li>
+      </ul>
+
+      <h3>2) Funkcjonalne</h3>
+      <ul>
+        <li>Cel: zapamiętywanie ustawień i preferencji.</li>
+        <li>Zgoda: wymagana.</li>
+      </ul>
+
+      <h3>3) Analityczne</h3>
+      <ul>
+        <li>Cel: statystyki odwiedzin i ulepszanie serwisu (np. pomiar ruchu).</li>
+        <li>Zgoda: wymagana. Bez zgody nie uruchamiam analityki.</li>
+      </ul>
+
+      <h3>4) Marketingowe</h3>
+      <ul>
+        <li>Cel: reklamy, remarketing i pomiar skuteczności kampanii.</li>
+        <li>Zgoda: wymagana. Bez zgody nie uruchamiam marketingowych trackerów.</li>
+      </ul>
+
+      <h2>Zarządzanie zgodą</h2>
+      <p>
+        Możesz:
+      </p>
+      <ul>
+        <li>zaakceptować wszystkie cookies,</li>
+        <li>odrzucić cookies inne niż niezbędne,</li>
+        <li>dostosować ustawienia dla poszczególnych kategorii,</li>
+        <li>wycofać zgodę w dowolnym momencie.</li>
+      </ul>
+
+      <p>
+        Aby ponownie wyświetlić okno zgody, użyj przycisku poniżej.
+      </p>
+
+      <ClientResetConsentButton />
+
+      <h2>Jak usunąć cookies w przeglądarce</h2>
+      <p>
+        Możesz też usuwać cookies i blokować je w ustawieniach przeglądarki. Pamiętaj: zablokowanie cookies niezbędnych może spowodować,
+        że strona nie będzie działać prawidłowo.
+      </p>
+
+      <h2>Kontakt</h2>
+      <p>
+        Jeśli masz pytania o prywatność lub cookies, przejdź do zakładki Kontakt.
+      </p>
+    </main>
+  );
+}
+
+// Client component w tym samym pliku (Next na to pozwala, ale musi mieć 'use client' osobno)
+function ClientResetConsentButton() {
+  return (
+    <div style={{ marginTop: 12 }}>
+      <ResetConsentButton />
+    </div>
+  );
+}
+
+function ResetConsentButton() {
+  return (
+    <>
+      {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+      <button
+        type="button"
+        onClick={() => {
+          localStorage.removeItem('wp_cookie_consent');
+          window.dispatchEvent(new CustomEvent('cookie-consent-updated'));
+          window.location.reload();
+        }}
+        style={{
+          border: '1px solid #111',
+          borderRadius: 8,
+          padding: '10px 14px',
+          cursor: 'pointer',
+          background: 'white',
+        }}
+      >
+        Wycofaj zgodę i pokaż okno cookies
+      </button>
+    </>
+  );
+}
