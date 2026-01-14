@@ -33,6 +33,7 @@ export function APKForm() {
     // Mieszkanie
     mieszkanie_lokalizacja: "",
     mieszkanie_rodzaj: "",
+    mieszkanie_pietro: "",
     mieszkanie_powierzchnia: "",
     mieszkanie_rok: "",
     mieszkanie_wartosc: "",
@@ -40,15 +41,24 @@ export function APKForm() {
     // Samochód
     samochod_zakres: "",
     samochod_marka: "",
+    samochod_model: "",
     samochod_rok: "",
+    samochod_data_rejestracji: "",
+    samochod_data_prawa_jazdy: "",
+    samochod_pojemnosc: "",
     samochod_moc: "",
+    samochod_wartosc_ac: "",
     samochod_uzytkowanie: "",
     samochod_szkody: "",
     samochod_uwagi: "",
     // Podróże
     podroze_kierunek: "",
     podroze_termin: "",
-    podroze_osoby: "",
+    podroze_termin_powrot: "",
+    podroze_dorosli_ilosc: "",
+    podroze_dorosli_wiek: "",
+    podroze_dzieci_ilosc: "",
+    podroze_dzieci_wiek: "",
     podroze_sporty: "",
     podroze_choroby: "",
     podroze_uwagi: "",
@@ -304,6 +314,17 @@ export function APKForm() {
                   </select>
                 </div>
                 <div>
+                  <Label htmlFor="mieszkanie_pietro">Piętro (dla mieszkania)</Label>
+                  <Input
+                    id="mieszkanie_pietro"
+                    name="mieszkanie_pietro"
+                    type="number"
+                    value={formData.mieszkanie_pietro}
+                    onChange={handleInputChange}
+                    placeholder="np. 3"
+                  />
+                </div>
+                <div>
                   <Label htmlFor="mieszkanie_powierzchnia">Powierzchnia (m²)</Label>
                   <Input
                     id="mieszkanie_powierzchnia"
@@ -372,13 +393,24 @@ export function APKForm() {
                   </select>
                 </div>
                 <div>
-                  <Label htmlFor="samochod_marka">Marka / model *</Label>
+                  <Label htmlFor="samochod_marka">Marka *</Label>
                   <Input
                     id="samochod_marka"
                     name="samochod_marka"
                     value={formData.samochod_marka}
                     onChange={handleInputChange}
-                    placeholder="np. Toyota Corolla"
+                    placeholder="np. Toyota"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="samochod_model">Model *</Label>
+                  <Input
+                    id="samochod_model"
+                    name="samochod_model"
+                    value={formData.samochod_model}
+                    onChange={handleInputChange}
+                    placeholder="np. Corolla"
                     required
                   />
                 </div>
@@ -394,15 +426,64 @@ export function APKForm() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="samochod_moc">Pojemność / moc (opcjonalnie)</Label>
+                  <Label htmlFor="samochod_data_rejestracji">Data pierwszej rejestracji *</Label>
+                  <Input
+                    id="samochod_data_rejestracji"
+                    name="samochod_data_rejestracji"
+                    type="date"
+                    value={formData.samochod_data_rejestracji}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="samochod_data_prawa_jazdy">Data uzyskania prawa jazdy *</Label>
+                  <Input
+                    id="samochod_data_prawa_jazdy"
+                    name="samochod_data_prawa_jazdy"
+                    type="date"
+                    value={formData.samochod_data_prawa_jazdy}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="samochod_pojemnosc">Pojemność silnika (cm³) *</Label>
+                  <Input
+                    id="samochod_pojemnosc"
+                    name="samochod_pojemnosc"
+                    type="number"
+                    value={formData.samochod_pojemnosc}
+                    onChange={handleInputChange}
+                    placeholder="np. 1598"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="samochod_moc">Moc silnika (KM) - opcjonalnie</Label>
                   <Input
                     id="samochod_moc"
                     name="samochod_moc"
+                    type="number"
                     value={formData.samochod_moc}
                     onChange={handleInputChange}
-                    placeholder="np. 1.6 / 120 KM"
+                    placeholder="np. 120"
                   />
                 </div>
+                {(formData.samochod_zakres.includes("AC")) && (
+                  <div>
+                    <Label htmlFor="samochod_wartosc_ac">Szacowana wartość samochodu (PLN) *</Label>
+                    <Input
+                      id="samochod_wartosc_ac"
+                      name="samochod_wartosc_ac"
+                      type="number"
+                      value={formData.samochod_wartosc_ac}
+                      onChange={handleInputChange}
+                      placeholder="np. 35000"
+                      required
+                    />
+                  </div>
+                )}
                 <div>
                   <Label htmlFor="samochod_uzytkowanie">Sposób użytkowania</Label>
                   <select
@@ -474,14 +555,59 @@ export function APKForm() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="podroze_osoby">Liczba osób + wiek *</Label>
+                  <Label htmlFor="podroze_termin_powrot">Data powrotu *</Label>
                   <Input
-                    id="podroze_osoby"
-                    name="podroze_osoby"
-                    value={formData.podroze_osoby}
+                    id="podroze_termin_powrot"
+                    name="podroze_termin_powrot"
+                    type="date"
+                    value={formData.podroze_termin_powrot}
                     onChange={handleInputChange}
-                    placeholder="np. 2 dorosłych, dzieci 5 i 8 lat"
                     required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="podroze_dorosli_ilosc">Liczba osób dorosłych *</Label>
+                  <Input
+                    id="podroze_dorosli_ilosc"
+                    name="podroze_dorosli_ilosc"
+                    type="number"
+                    value={formData.podroze_dorosli_ilosc}
+                    onChange={handleInputChange}
+                    placeholder="np. 2"
+                    required
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="podroze_dorosli_wiek">Wiek osób dorosłych</Label>
+                  <Input
+                    id="podroze_dorosli_wiek"
+                    name="podroze_dorosli_wiek"
+                    value={formData.podroze_dorosli_wiek}
+                    onChange={handleInputChange}
+                    placeholder="np. 35, 40"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="podroze_dzieci_ilosc">Liczba dzieci</Label>
+                  <Input
+                    id="podroze_dzieci_ilosc"
+                    name="podroze_dzieci_ilosc"
+                    type="number"
+                    value={formData.podroze_dzieci_ilosc}
+                    onChange={handleInputChange}
+                    placeholder="np. 2"
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="podroze_dzieci_wiek">Wiek dzieci</Label>
+                  <Input
+                    id="podroze_dzieci_wiek"
+                    name="podroze_dzieci_wiek"
+                    value={formData.podroze_dzieci_wiek}
+                    onChange={handleInputChange}
+                    placeholder="np. 5, 8"
                   />
                 </div>
                 <div>
