@@ -1,12 +1,35 @@
-import CookieConsent from '@/components/CookieConsent';
+import "./globals.css"
+import type { Metadata } from "next"
+import { Geist, Geist_Mono } from "next/font/google"
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+import Header from "@/components/layout/header"
+import Footer from "@/components/layout/footer"
+
+const geist = Geist({
+  subsets: ["latin"],
+})
+
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+})
+
+export const metadata: Metadata = {
+  title: "Wawerpolisy.pl — Ubezpieczenia",
+  description: "Przejrzyste ubezpieczenia z Wawra. Samochód, mieszkanie, życie, firma.",
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="pl">
-      <body>
-        {children}
-        <CookieConsent />
+      <body className={`${geist.className} ${geistMono.className} font-sans antialiased`}>
+        <Header />
+        <main>{children}</main>
+        <Footer />
       </body>
     </html>
-  );
+  )
 }
