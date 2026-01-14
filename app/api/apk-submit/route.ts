@@ -223,7 +223,7 @@ export async function POST(req: Request) {
     if (priorities) {
       const priorityList = priorities
         .split(", ")
-        .map((p) => `<li style="margin: 5px 0;">${p}</li>`)
+        .map((p: string) => `<li style="margin: 5px 0;">${p}</li>`)
         .join("")
       sectionsHTML += `
         <div style="background: #fef3c7; border: 1px solid #fbbf24; padding: 15px; border-radius: 8px; margin: 20px 0;">
