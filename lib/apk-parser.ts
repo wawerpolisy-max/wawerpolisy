@@ -38,14 +38,14 @@ export interface CalculationRequest {
     model: string;
     year: number;
     registrationNumber?: string;
-    firstRegistrationDate: string;
+    firstRegistrationDate: Date;
     engineCapacity: number;
     enginePower: number;
     usage: string;
   };
   driver: {
     age: number;
-    drivingLicenseDate: string;
+    drivingLicenseDate: Date;
     accidentHistory: number;
   };
   options: {
@@ -144,14 +144,14 @@ export function apkToCalculationRequest(apk: APKEmailData): CalculationRequest {
       brand: apk.brand,
       model: apk.model,
       year: apk.year,
-      firstRegistrationDate: convertDateToDMY(apk.firstRegistrationDate),
+      firstRegistrationDate: parseDMYToDate(apk.firstRegistrationDate),
       engineCapacity: apk.engineCapacity,
       enginePower: apk.enginePower,
       usage: apk.usage,
     },
     driver: {
       age: calculateAgeFromLicenseDate(apk.licenseDate),
-      drivingLicenseDate: convertDateToISO(apk.licenseDate),
+      drivingLicenseDate: parseDMYToDate(apk.licenseDate),
       accidentHistory: apk.hasAccidents ? 1 : 0,
     },
     options: {
@@ -182,10 +182,14 @@ function convertDateToISO(dateStr: string): string {
 }
 
 /**
- * Helper: Zachowuje format DD.MM.YYYY
+ * Helper: Konwertuje DD.MM.YYYY na Date
  */
-function convertDateToDMY(dateStr: string): string {
-  return dateStr; // już jest w formacie DD.MM.YYYY
+function parseDMYToDate(dateStr: string): Date {
+  const parts = dateStr.split('.');
+  if (parts.length !== 3) return new Date();
+  
+  const [day, month, year] = parts;
+  return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
 }
 
 /**
