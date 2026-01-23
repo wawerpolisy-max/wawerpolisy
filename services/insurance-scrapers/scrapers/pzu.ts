@@ -56,7 +56,7 @@ export class PzuScraper {
       });
 
       // Czekaj na załadowanie strony
-      await page.waitForTimeout(2000);
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Szukaj przycisku "Kup online" lub "Oblicz składkę"
       const startButtons = [
@@ -75,7 +75,7 @@ export class PzuScraper {
             await button.click();
             buttonClicked = true;
             console.log('[PZU] Kliknięto przycisk startu');
-            await page.waitForTimeout(2000);
+            await new Promise(resolve => setTimeout(resolve, 2000));
             break;
           }
         } catch {}
@@ -145,7 +145,7 @@ export class PzuScraper {
 
       if (!resultsFound) {
         // Czekaj trochę na wyniki
-        await page.waitForTimeout(5000);
+        await new Promise(resolve => setTimeout(resolve, 5000));
       }
 
       // Ekstrakcja oferty
@@ -203,14 +203,14 @@ export class PzuScraper {
           console.log('[PZU] Wpisano numer rejestracyjny');
           
           // Szukaj przycisku sprawdzenia
-          await page.waitForTimeout(1000);
+          await new Promise(resolve => setTimeout(resolve, 1000));
           const checkButton = await page.$('button:has-text("Sprawdź"), button:has-text("Szukaj")');
           if (checkButton) {
             await checkButton.click();
-            await page.waitForTimeout(3000);
+            await new Promise(resolve => setTimeout(resolve, 3000));
           } else {
             await page.keyboard.press('Tab');
-            await page.waitForTimeout(2000);
+            await new Promise(resolve => setTimeout(resolve, 2000));
           }
           return;
         }
@@ -227,7 +227,7 @@ export class PzuScraper {
       const manualButton = await page.$('button:has-text("ręcznie"), a:has-text("ręcznie")');
       if (manualButton) {
         await manualButton.click();
-        await page.waitForTimeout(1000);
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
     } catch {}
 
@@ -261,14 +261,14 @@ export class PzuScraper {
             }
           } else if (tagName === 'INPUT') {
             await element.type(request.vehicle.brand);
-            await page.waitForTimeout(500);
+            await new Promise(resolve => setTimeout(resolve, 500));
             // Może pojawić się dropdown z sugestiami
             await page.keyboard.press('ArrowDown');
             await page.keyboard.press('Enter');
           }
           
           console.log('[PZU] Wybrano markę pojazdu');
-          await page.waitForTimeout(1000);
+          await new Promise(resolve => setTimeout(resolve, 1000));
           break;
         }
       } catch (e) {
@@ -286,7 +286,7 @@ export class PzuScraper {
       try {
         const element = await page.$(selector);
         if (element) {
-          await page.waitForTimeout(500);
+          await new Promise(resolve => setTimeout(resolve, 500));
           const tagName = await page.evaluate(el => el.tagName, element);
           
           if (tagName === 'SELECT') {
@@ -303,13 +303,13 @@ export class PzuScraper {
             }
           } else {
             await element.type(request.vehicle.model);
-            await page.waitForTimeout(500);
+            await new Promise(resolve => setTimeout(resolve, 500));
             await page.keyboard.press('ArrowDown');
             await page.keyboard.press('Enter');
           }
           
           console.log('[PZU] Wybrano model pojazdu');
-          await page.waitForTimeout(1000);
+          await new Promise(resolve => setTimeout(resolve, 1000));
           break;
         }
       } catch {}
@@ -334,7 +334,7 @@ export class PzuScraper {
             await element.type(request.vehicle.year.toString());
           }
           console.log('[PZU] Ustawiono rok produkcji');
-          await page.waitForTimeout(500);
+          await new Promise(resolve => setTimeout(resolve, 500));
           break;
         }
       } catch {}
@@ -409,7 +409,7 @@ export class PzuScraper {
           }
           
           console.log('[PZU] Uzupełniono wiek');
-          await page.waitForTimeout(500);
+          await new Promise(resolve => setTimeout(resolve, 500));
           break;
         }
       } catch {}
@@ -442,7 +442,7 @@ export class PzuScraper {
           }
           
           console.log('[PZU] Uzupełniono datę prawa jazdy');
-          await page.waitForTimeout(500);
+          await new Promise(resolve => setTimeout(resolve, 500));
           break;
         }
       } catch {}
@@ -498,7 +498,7 @@ export class PzuScraper {
             if (!isChecked) {
               await checkbox.click();
               console.log('[PZU] Zaznaczono AC');
-              await page.waitForTimeout(1000);
+              await new Promise(resolve => setTimeout(resolve, 1000));
             }
 
             // Wartość pojazdu dla AC
@@ -527,7 +527,7 @@ export class PzuScraper {
           const checkbox = await page.$(selector);
           if (checkbox) {
             await checkbox.click();
-            await page.waitForTimeout(300);
+            await new Promise(resolve => setTimeout(resolve, 300));
             break;
           }
         } catch {}
@@ -546,7 +546,7 @@ export class PzuScraper {
           const checkbox = await page.$(selector);
           if (checkbox) {
             await checkbox.click();
-            await page.waitForTimeout(300);
+            await new Promise(resolve => setTimeout(resolve, 300));
             break;
           }
         } catch {}

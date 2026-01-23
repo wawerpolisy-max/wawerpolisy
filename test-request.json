@@ -1,0 +1,22 @@
+{
+  "insuranceCompany": "pzu",
+  "vehicle": {
+    "brand": "Volkswagen",
+    "model": "Golf",
+    "year": 2020,
+    "engineCapacity": 1600,
+    "fuelType": "benzyna"
+  },
+  "driver": {
+    "age": 35,
+    "drivingLicenseDate": "2005-06-15",
+    "accidentHistory": 0
+  },
+  "options": {
+    "ocOnly": false,
+    "acIncluded": true,
+    "assistance": true,
+    "nnw": false,
+    "acValue": 45000
+  }
+}

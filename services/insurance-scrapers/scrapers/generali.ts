@@ -75,7 +75,7 @@ export class GeneraliScraper {
         throw new Error('Nie udało się załadować żadnej strony Generali');
       }
 
-      await page.waitForTimeout(2000);
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Szukaj przycisku startu kalkulatora
       const startButtons = [
@@ -92,7 +92,7 @@ export class GeneraliScraper {
           if (button) {
             await button.click();
             console.log('[Generali] Kliknięto przycisk startu');
-            await page.waitForTimeout(2000);
+            await new Promise(resolve => setTimeout(resolve, 2000));
             break;
           }
         } catch {}
@@ -156,7 +156,7 @@ export class GeneraliScraper {
       }
 
       if (!resultsFound) {
-        await page.waitForTimeout(5000);
+        await new Promise(resolve => setTimeout(resolve, 5000));
       }
 
       // Ekstrakcja oferty
@@ -214,7 +214,7 @@ export class GeneraliScraper {
           await input.type(request.vehicle.registrationNumber!);
           console.log('[Generali] Wpisano numer rejestracyjny');
           
-          await page.waitForTimeout(1000);
+          await new Promise(resolve => setTimeout(resolve, 1000));
           
           // Szukaj przycisku sprawdzenia
           const checkButtons = [
@@ -228,7 +228,7 @@ export class GeneraliScraper {
               const btn = await page.$(btnSelector);
               if (btn) {
                 await btn.click();
-                await page.waitForTimeout(3000);
+                await new Promise(resolve => setTimeout(resolve, 3000));
                 return;
               }
             } catch {}
@@ -236,7 +236,7 @@ export class GeneraliScraper {
           
           // Jeśli nie ma przycisku, naciśnij Tab/Enter
           await page.keyboard.press('Tab');
-          await page.waitForTimeout(2000);
+          await new Promise(resolve => setTimeout(resolve, 2000));
           return;
         }
       } catch {}
@@ -252,7 +252,7 @@ export class GeneraliScraper {
       const manualLink = await page.$('a:has-text("ręcznie"), button:has-text("ręcznie")');
       if (manualLink) {
         await manualLink.click();
-        await page.waitForTimeout(1000);
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
     } catch {}
 
@@ -274,13 +274,13 @@ export class GeneraliScraper {
             await page.select(selector, request.vehicle.brand);
           } else {
             await element.type(request.vehicle.brand);
-            await page.waitForTimeout(1000);
+            await new Promise(resolve => setTimeout(resolve, 1000));
             await page.keyboard.press('ArrowDown');
             await page.keyboard.press('Enter');
           }
           
           console.log('[Generali] Wybrano markę');
-          await page.waitForTimeout(1000);
+          await new Promise(resolve => setTimeout(resolve, 1000));
           break;
         }
       } catch (e) {
@@ -297,7 +297,7 @@ export class GeneraliScraper {
 
     for (const selector of modelSelectors) {
       try {
-        await page.waitForTimeout(800);
+        await new Promise(resolve => setTimeout(resolve, 800));
         const element = await page.$(selector);
         if (element) {
           const tagName = await page.evaluate(el => el.tagName, element);
@@ -306,13 +306,13 @@ export class GeneraliScraper {
             await page.select(selector, request.vehicle.model);
           } else {
             await element.type(request.vehicle.model);
-            await page.waitForTimeout(1000);
+            await new Promise(resolve => setTimeout(resolve, 1000));
             await page.keyboard.press('ArrowDown');
             await page.keyboard.press('Enter');
           }
           
           console.log('[Generali] Wybrano model');
-          await page.waitForTimeout(1000);
+          await new Promise(resolve => setTimeout(resolve, 1000));
           break;
         }
       } catch {}
@@ -339,7 +339,7 @@ export class GeneraliScraper {
           }
           
           console.log('[Generali] Ustawiono rok');
-          await page.waitForTimeout(500);
+          await new Promise(resolve => setTimeout(resolve, 500));
           break;
         }
       } catch {}
@@ -420,7 +420,7 @@ export class GeneraliScraper {
           }
           
           console.log('[Generali] Uzupełniono wiek');
-          await page.waitForTimeout(500);
+          await new Promise(resolve => setTimeout(resolve, 500));
           break;
         }
       } catch {}
@@ -454,7 +454,7 @@ export class GeneraliScraper {
           }
           
           console.log('[Generali] Uzupełniono prawo jazdy');
-          await page.waitForTimeout(500);
+          await new Promise(resolve => setTimeout(resolve, 500));
           break;
         }
       } catch {}
@@ -511,7 +511,7 @@ export class GeneraliScraper {
             if (!isChecked) {
               await checkbox.click();
               console.log('[Generali] Zaznaczono AC');
-              await page.waitForTimeout(1000);
+              await new Promise(resolve => setTimeout(resolve, 1000));
             }
 
             // Wartość pojazdu
@@ -552,7 +552,7 @@ export class GeneraliScraper {
           const checkbox = await page.$(selector);
           if (checkbox) {
             await checkbox.click();
-            await page.waitForTimeout(300);
+            await new Promise(resolve => setTimeout(resolve, 300));
             break;
           }
         } catch {}
@@ -572,7 +572,7 @@ export class GeneraliScraper {
           const checkbox = await page.$(selector);
           if (checkbox) {
             await checkbox.click();
-            await page.waitForTimeout(300);
+            await new Promise(resolve => setTimeout(resolve, 300));
             break;
           }
         } catch {}

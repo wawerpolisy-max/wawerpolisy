@@ -77,7 +77,7 @@ export class UniqaScraper {
       await page.waitForSelector('.offer-result, .price-container, .quote-summary', { 
         timeout: 20000 
       });
-      await page.waitForTimeout(2000);
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Ekstrakcja oferty
       const quote = await this.extractQuote(page, request);
@@ -133,7 +133,7 @@ export class UniqaScraper {
       }
       
       // Czekaj na załadowanie danych pojazdu
-      await page.waitForTimeout(3000);
+      await new Promise(resolve => setTimeout(resolve, 3000));
     }
   }
 
@@ -142,21 +142,21 @@ export class UniqaScraper {
     const manualButton = await page.$('button.manual-entry, a[href*="manual"]');
     if (manualButton) {
       await manualButton.click();
-      await page.waitForTimeout(1000);
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
     // Marka pojazdu
     const brandSelector = await page.$('select[name="brand"], select[name="vehicle.brand"]');
     if (brandSelector) {
       await page.select('select[name="brand"], select[name="vehicle.brand"]', request.vehicle.brand);
-      await page.waitForTimeout(1000);
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
     // Model
     const modelSelector = await page.$('select[name="model"]');
     if (modelSelector) {
       await page.select('select[name="model"]', request.vehicle.model);
-      await page.waitForTimeout(1000);
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
     // Rok produkcji
@@ -221,7 +221,7 @@ export class UniqaScraper {
         const isChecked = await page.evaluate(el => (el as HTMLInputElement).checked, acCheckbox);
         if (!isChecked) {
           await acCheckbox.click();
-          await page.waitForTimeout(500);
+          await new Promise(resolve => setTimeout(resolve, 500));
         }
 
         // Wartość pojazdu
@@ -239,7 +239,7 @@ export class UniqaScraper {
       const assistCheckbox = await page.$('input[name="assistance"], input[value="ASSISTANCE"]');
       if (assistCheckbox) {
         await assistCheckbox.click();
-        await page.waitForTimeout(300);
+        await new Promise(resolve => setTimeout(resolve, 300));
       }
     }
 
@@ -248,7 +248,7 @@ export class UniqaScraper {
       const nnwCheckbox = await page.$('input[name="nnw"], input[value="NNW"]');
       if (nnwCheckbox) {
         await nnwCheckbox.click();
-        await page.waitForTimeout(300);
+        await new Promise(resolve => setTimeout(resolve, 300));
       }
     }
   }
