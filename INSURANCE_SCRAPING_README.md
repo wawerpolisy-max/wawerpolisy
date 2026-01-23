@@ -5,14 +5,13 @@ System automatycznej kalkulacji składek ubezpieczeniowych dla polskich towarzys
 ## 🎯 Obecna wersja: POC (Proof of Concept)
 
 ### ✅ Zaimplementowane towarzystwa:
-- **Link4** - Direct insurer
+- **PZU** - Największe towarzystwo w Polsce
+- **Generali** - Międzynarodowe towarzystwo
 - **Uniqa** - 15% zniżki online
-- **TUZ** - Towarzystwo Ubezpieczeń Zdrowotnych
 
 ### 📋 Roadmap (do implementacji):
-- PZU
 - Warta
-- Generali
+- Link4
 - Compensa
 - Wiener
 - Trasti
@@ -41,7 +40,7 @@ GET /api/insurance/calculate?action=companies
 {
   "success": true,
   "data": {
-    "companies": ["link4", "uniqa", "tuz"],
+    "companies": ["pzu", "generali", "uniqa"],
     "count": 3
   }
 }
@@ -53,7 +52,7 @@ POST /api/insurance/calculate
 Content-Type: application/json
 
 {
-  "insuranceCompany": "link4",
+  "insuranceCompany": "pzu",
   "vehicle": {
     "registrationNumber": "WA12345",
     "brand": "Volkswagen",
@@ -84,7 +83,7 @@ Content-Type: application/json
   "data": {
     "success": true,
     "quote": {
-      "company": "Link4",
+      "company": "PZU",
       "ocPrice": 850,
       "acPrice": 1200,
       "totalPrice": 2050,
@@ -109,7 +108,7 @@ POST /api/insurance/calculate?multi=true
 Content-Type: application/json
 
 {
-  "companies": ["link4", "uniqa", "tuz"],
+  "companies": ["pzu", "generali", "uniqa"],
   "vehicle": { ... },
   "driver": { ... },
   "options": { ... }
@@ -125,7 +124,7 @@ Content-Type: application/json
       {
         "success": true,
         "quote": {
-          "company": "Link4",
+          "company": "PZU",
           "totalPrice": 2050,
           ...
         }
@@ -133,7 +132,7 @@ Content-Type: application/json
       {
         "success": true,
         "quote": {
-          "company": "Uniqa",
+          "company": "Generali",
           "totalPrice": 1980,
           ...
         }
@@ -174,7 +173,7 @@ import {
 
 // Przykład 1: Pojedyncze towarzystwo
 const result = await calculateInsurance({
-  insuranceCompany: 'link4',
+  insuranceCompany: 'pzu',
   vehicle: {
     brand: 'Volkswagen',
     model: 'Golf',
@@ -198,11 +197,11 @@ const results = await calculateInMultipleCompanies({
   vehicle: { ... },
   driver: { ... },
   options: { ... },
-}, ['link4', 'uniqa', 'tuz']);
+}, ['pzu', 'generali', 'uniqa']);
 
 // Przykład 3: Lista dostępnych
 const companies = getAvailableCompanies();
-console.log(companies); // ['link4', 'uniqa', 'tuz']
+console.log(companies); // ['pzu', 'generali', 'uniqa']
 ```
 
 ### Użycie z fetch/axios
@@ -215,7 +214,7 @@ const response = await fetch('/api/insurance/calculate', {
     'Content-Type': 'application/json',
   },
   body: JSON.stringify({
-    insuranceCompany: 'link4',
+    insuranceCompany: 'pzu',
     vehicle: { ... },
     driver: { ... },
     options: { ... },
@@ -240,9 +239,9 @@ if (data.success) {
 │       ├── cache.ts              # Cache layer (node-cache)
 │       ├── index.ts              # Orchestrator
 │       └── scrapers/
-│           ├── link4.ts          # ✅ Link4 scraper
-│           ├── uniqa.ts          # ✅ Uniqa scraper
-│           └── tuz.ts            # ✅ TUZ scraper
+│           ├── pzu.ts            # ✅ PZU scraper
+│           ├── generali.ts       # ✅ Generali scraper
+│           └── uniqa.ts          # ✅ Uniqa scraper
 ├── app/api/insurance/
 │   └── calculate/
 │       └── route.ts              # Next.js API route
@@ -257,7 +256,7 @@ if (data.success) {
 ### ✅ Zaimplementowane:
 - ✅ Web scraping (Puppeteer)
 - ✅ Cache layer (1 godzina TTL)
-- ✅ 3 towarzystwa (Link4, Uniqa, TUZ)
+- ✅ 3 towarzystwa (PZU, Generali, Uniqa)
 - ✅ Next.js API routes
 - ✅ TypeScript + Zod validation
 - ✅ Multi-company kalkulacja
@@ -265,7 +264,7 @@ if (data.success) {
 - ✅ Screenshots błędów (debug)
 
 ### 🚧 TODO:
-- ⏳ Pozostałe 9 towarzystw
+- ⏳ Pozostałe 9 towarzystw (Warta, Link4, Compensa, Wiener, Trasti, Proama, Allianz, TUW)
 - ⏳ Queue system (Bull)
 - ⏳ Rate limiting
 - ⏳ Proxy rotation (jeśli potrzebne)
@@ -302,17 +301,17 @@ this.browser = await puppeteer.launch({
 ### Logi konsoli
 Scrapers wypisują szczegółowe logi:
 ```
-[Link4] Rozpoczynam kalkulację...
-[Link4] Ładuję stronę kalkulatora...
-[Link4] Wypełniam formularz...
-[Link4] Obliczam składkę...
-[Link4] ✅ Kalkulacja zakończona w 5234ms
+[PZU] Rozpoczynam kalkulację...
+[PZU] Ładuję stronę kalkulatora...
+[PZU] Wypełniam formularz...
+[PZU] Obliczam składkę...
+[PZU] ✅ Kalkulacja zakończona w 5234ms
 ```
 
 ### Screenshots błędów
 W przypadku błędu, scraper zapisuje screenshot:
 ```
-./logs/link4-error-1706012345678.png
+./logs/pzu-error-1706012345678.png
 ```
 
 Stwórz folder logs:

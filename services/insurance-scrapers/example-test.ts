@@ -52,24 +52,24 @@ async function main() {
   console.log(`Opcje: OC + AC (${testData.options.acValue} PLN), Assistance\n`);
 
   // 3. Test pojedynczego towarzystwa (szybki test)
-  console.log('🔍 TEST 1: Kalkulacja dla Link4');
+  console.log('🔍 TEST 1: Kalkulacja dla PZU');
   console.log('─'.repeat(50));
   
   try {
-    const link4Result = await calculateInsurance({
+    const pzuResult = await calculateInsurance({
       ...testData,
-      insuranceCompany: 'link4',
+      insuranceCompany: 'pzu',
     });
 
-    if (link4Result.success && link4Result.quote) {
+    if (pzuResult.success && pzuResult.quote) {
       console.log('✅ Sukces!');
-      console.log(`OC: ${link4Result.quote.ocPrice} PLN`);
-      console.log(`AC: ${link4Result.quote.acPrice} PLN`);
-      console.log(`TOTAL: ${link4Result.quote.totalPrice} PLN`);
-      console.log(`Czas wykonania: ${link4Result.executionTime}ms`);
-      console.log(`Z cache: ${link4Result.cached ? 'TAK' : 'NIE'}`);
+      console.log(`OC: ${pzuResult.quote.ocPrice} PLN`);
+      console.log(`AC: ${pzuResult.quote.acPrice} PLN`);
+      console.log(`TOTAL: ${pzuResult.quote.totalPrice} PLN`);
+      console.log(`Czas wykonania: ${pzuResult.executionTime}ms`);
+      console.log(`Z cache: ${pzuResult.cached ? 'TAK' : 'NIE'}`);
     } else {
-      console.log('❌ Błąd:', link4Result.error);
+      console.log('❌ Błąd:', pzuResult.error);
     }
   } catch (error: any) {
     console.error('❌ Wyjątek:', error.message);
@@ -84,7 +84,7 @@ async function main() {
   try {
     const cachedResult = await calculateInsurance({
       ...testData,
-      insuranceCompany: 'link4',
+      insuranceCompany: 'pzu',
     });
 
     if (cachedResult.success && cachedResult.quote) {

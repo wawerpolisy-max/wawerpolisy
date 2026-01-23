@@ -6,21 +6,20 @@
 
 import type { CalculationRequest, ScraperResult, InsuranceCompany } from './types';
 import { insuranceCache } from './cache';
-import Link4Scraper from './scrapers/link4';
+import PzuScraper from './scrapers/pzu';
+import GeneraliScraper from './scrapers/generali';
 import UniqaScraper from './scrapers/uniqa';
-import TuzScraper from './scrapers/tuz';
 
 /**
  * Mapa dostępnych scraperów
  */
 const scrapers = {
-  link4: new Link4Scraper(),
+  pzu: new PzuScraper(),
+  generali: new GeneraliScraper(),
   uniqa: new UniqaScraper(),
-  tuz: new TuzScraper(),
   // TODO: Dodaj pozostałe towarzystwa
-  // pzu: new PzuScraper(),
   // warta: new WartaScraper(),
-  // generali: new GeneraliScraper(),
+  // link4: new Link4Scraper(),
   // compensa: new CompensaScraper(),
   // wiener: new WienerScraper(),
   // trasti: new TrastiScraper(),
@@ -164,7 +163,7 @@ export function getCacheStats() {
 }
 
 // Eksport poszczególnych scraperów (dla zaawansowanego użycia)
-export { Link4Scraper, UniqaScraper, TuzScraper };
+export { PzuScraper, GeneraliScraper, UniqaScraper };
 
 // Eksport typów
 export * from './types';
