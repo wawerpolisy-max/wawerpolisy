@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseAPKEmail, parseAPKPlainText, apkToCalculationRequest } from '@/lib/apk-parser';
-import { calculateInsurance, calculateMultipleInsurances } from '@/services/insurance-scrapers';
+import { calculateInsurance } from '@/services/insurance-scrapers';
 
 /**
  * APK Parser & Calculator API
@@ -45,10 +45,11 @@ export async function POST(request: NextRequest) {
     console.log('🚗 Calculating insurance quotes...');
     const targetCompanies = companies || ['pzu', 'generali', 'uniqa'];
     
-    const quotes = await calculateMultipleInsurances({
-      companies: targetCompanies,
-      ...calculationRequest,
-    });
+    const quotes = await Promise.all(
+      targetCompanies.map((company: string) => 
+        calculateInsurance({ ...calculationRequest, insuranceCompany: company })
+      )
+    );
     
     // 4. Sort by price (cheapest first)
     const sortedQuotes = quotes

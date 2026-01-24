@@ -176,10 +176,7 @@
       "parameters": {
         "authentication": "oAuth2",
         "messageId": "={{ $node[\"Gmail Trigger - APK\"].json.id }}",
-        "labelIds": ["INBOX"],
-        "options": {
-          "markAsRead": true
-        }
+        "labelIds": ["INBOX"]
       },
       "id": "mark-email-read",
       "name": "Oznacz Email jako Przeczytany",
