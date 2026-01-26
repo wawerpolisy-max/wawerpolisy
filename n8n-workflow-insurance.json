@@ -1,0 +1,309 @@
+{
+  "name": "Insurance Quote Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "insurance-quote",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook - Dane Klienta",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "insurance-quote-webhook"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "company",
+              "value": "={{ $json.body.insuranceCompany || 'pzu' }}"
+            },
+            {
+              "name": "vehicleBrand",
+              "value": "={{ $json.body.vehicle.brand }}"
+            },
+            {
+              "name": "vehicleModel",
+              "value": "={{ $json.body.vehicle.model }}"
+            },
+            {
+              "name": "vehicleYear",
+              "value": "={{ $json.body.vehicle.year }}"
+            },
+            {
+              "name": "driverAge",
+              "value": "={{ $json.body.driver.age }}"
+            },
+            {
+              "name": "licenseDate",
+              "value": "={{ $json.body.driver.drivingLicenseDate }}"
+            },
+            {
+              "name": "acValue",
+              "value": "={{ $json.body.options.acValue }}"
+            }
+          ]
+        }
+      },
+      "id": "set-variables",
+      "name": "Przygotuj Dane",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Lista towarzystw do sprawdzenia\nconst companies = ['pzu', 'generali', 'uniqa'];\n\n// Przygotuj dane pojazdu i kierowcy\nconst vehicle = {\n  brand: $input.first().json.vehicleBrand,\n  model: $input.first().json.vehicleModel,\n  year: parseInt($input.first().json.vehicleYear)\n};\n\nconst driver = {\n  age: parseInt($input.first().json.driverAge),\n  drivingLicenseDate: $input.first().json.licenseDate,\n  accidentHistory: 0\n};\n\nconst options = {\n  acIncluded: true,\n  acValue: parseInt($input.first().json.acValue || 45000)\n};\n\n// Zwróć tablicę z każdym towarzystwem\nreturn companies.map(company => ({\n  json: {\n    insuranceCompany: company,\n    vehicle: vehicle,\n    driver: driver,\n    options: options\n  }\n}));"
+      },
+      "id": "prepare-requests",
+      "name": "Przygotuj Requesty dla TU",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "split-in-batches",
+      "name": "Pętla po Towarzystwach",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://your-domain.com/api/insurance/calculate",
+        "authentication": "none",
+        "requestMethod": "POST",
+        "jsonParameters": true,
+        "options": {
+          "timeout": 90000
+        },
+        "bodyParametersJson": "={{ JSON.stringify($json) }}"
+      },
+      "id": "http-request-insurance",
+      "name": "Wywołaj API Insurance",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.success }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "check-success",
+      "name": "Sprawdź czy sukces",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "company",
+              "value": "={{ $json.data.quote.company }}"
+            },
+            {
+              "name": "ocPrice",
+              "value": "={{ $json.data.quote.ocPrice }}"
+            },
+            {
+              "name": "acPrice",
+              "value": "={{ $json.data.quote.acPrice }}"
+            },
+            {
+              "name": "totalPrice",
+              "value": "={{ $json.data.quote.totalPrice }}"
+            },
+            {
+              "name": "cached",
+              "value": "={{ $json.data.cached }}"
+            },
+            {
+              "name": "executionTime",
+              "value": "={{ $json.data.executionTime }}"
+            }
+          ]
+        }
+      },
+      "id": "extract-quote",
+      "name": "Wyciągnij Cenę",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1450, 200]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition",
+        "options": {}
+      },
+      "id": "merge-results",
+      "name": "Zbierz Wszystkie Wyniki",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [1650, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Sortuj wyniki po cenie (od najtańszej)\nconst items = $input.all();\n\nconst sorted = items.sort((a, b) => {\n  const priceA = parseFloat(a.json.totalPrice) || Infinity;\n  const priceB = parseFloat(b.json.totalPrice) || Infinity;\n  return priceA - priceB;\n});\n\n// Oblicz średnią cenę\nconst validPrices = sorted\n  .map(item => parseFloat(item.json.totalPrice))\n  .filter(price => price > 0);\n\nconst avgPrice = validPrices.length > 0\n  ? validPrices.reduce((sum, price) => sum + price, 0) / validPrices.length\n  : 0;\n\n// Najlepsza oferta\nconst bestOffer = sorted[0]?.json || {};\n\n// Oszczędności\nconst savings = avgPrice > 0 ? (avgPrice - bestOffer.totalPrice) : 0;\nconst savingsPercent = avgPrice > 0 ? ((savings / avgPrice) * 100).toFixed(1) : 0;\n\nreturn [\n  {\n    json: {\n      allOffers: sorted.map(item => item.json),\n      bestOffer: bestOffer,\n      averagePrice: avgPrice.toFixed(2),\n      savings: savings.toFixed(2),\n      savingsPercent: savingsPercent,\n      totalOffers: sorted.length\n    }\n  }\n];"
+      },
+      "id": "analyze-offers",
+      "name": "Analizuj Oferty",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1850, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "ubezpieczenia@twoja-firma.pl",
+        "toEmail": "={{ $json.clientEmail }}",
+        "subject": "Najlepsza oferta ubezpieczenia OC/AC",
+        "emailType": "html",
+        "message": "<h2>🚗 Twoja najlepsza oferta ubezpieczenia</h2>\n\n<p>Dzień dobry,</p>\n\n<p>Przygotowaliśmy dla Ciebie porównanie ofert ubezpieczenia dla Twojego pojazdu.</p>\n\n<h3>💰 Najlepsza oferta:</h3>\n<ul>\n  <li><strong>Towarzystwo:</strong> {{ $json.bestOffer.company }}</li>\n  <li><strong>OC:</strong> {{ $json.bestOffer.ocPrice }} PLN</li>\n  <li><strong>AC:</strong> {{ $json.bestOffer.acPrice }} PLN</li>\n  <li><strong>RAZEM:</strong> <span style=\"color: green; font-size: 24px;\">{{ $json.bestOffer.totalPrice }} PLN</span></li>\n</ul>\n\n<h3>📊 Porównanie wszystkich ofert:</h3>\n<table border=\"1\" cellpadding=\"10\">\n  <tr>\n    <th>Towarzystwo</th>\n    <th>Cena OC</th>\n    <th>Cena AC</th>\n    <th>Cena Całkowita</th>\n  </tr>\n  {{#each $json.allOffers}}\n  <tr>\n    <td>{{ company }}</td>\n    <td>{{ ocPrice }} PLN</td>\n    <td>{{ acPrice }} PLN</td>\n    <td><strong>{{ totalPrice }} PLN</strong></td>\n  </tr>\n  {{/each}}\n</table>\n\n<h3>💡 Oszczędności:</h3>\n<p>Wybierając najtańszą ofertę zaoszczędzisz: <strong>{{ $json.savings }} PLN ({{ $json.savingsPercent }}%)</strong> w porównaniu do średniej ceny.</p>\n\n<p>Chcesz kupić tę polisę? Odpisz na tego maila lub zadzwoń!</p>\n\n<p>Pozdrawiamy,<br>\nTwój Broker Ubezpieczeniowy</p>",
+        "options": {}
+      },
+      "id": "send-email",
+      "name": "Wyślij Email z Ofertą",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [2050, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - Dane Klienta": {
+      "main": [
+        [
+          {
+            "node": "Przygotuj Dane",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Przygotuj Dane": {
+      "main": [
+        [
+          {
+            "node": "Przygotuj Requesty dla TU",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Przygotuj Requesty dla TU": {
+      "main": [
+        [
+          {
+            "node": "Pętla po Towarzystwach",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pętla po Towarzystwach": {
+      "main": [
+        [
+          {
+            "node": "Wywołaj API Insurance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wywołaj API Insurance": {
+      "main": [
+        [
+          {
+            "node": "Sprawdź czy sukces",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sprawdź czy sukces": {
+      "main": [
+        [
+          {
+            "node": "Wyciągnij Cenę",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wyciągnij Cenę": {
+      "main": [
+        [
+          {
+            "node": "Pętla po Towarzystwach",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pętla po Towarzystwach (completed)": {
+      "main": [
+        [
+          {
+            "node": "Zbierz Wszystkie Wyniki",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Zbierz Wszystkie Wyniki": {
+      "main": [
+        [
+          {
+            "node": "Analizuj Oferty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analizuj Oferty": {
+      "main": [
+        [
+          {
+            "node": "Wyślij Email z Ofertą",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1",
+  "id": "insurance-quote-automation",
+  "meta": {
+    "instanceId": "your-n8n-instance"
+  },
+  "tags": []
+}

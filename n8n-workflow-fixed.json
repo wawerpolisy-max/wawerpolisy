@@ -1,0 +1,58 @@
+{
+  "name": "APK Insurance Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://77.42.77.255:3000/api/apk/parse-and-calculate",
+        "authentication": "none",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\"emailBody\": \"Dane klienta:\\n\\nImię i nazwisko: Mateusz Pawelec\\nTelefon: +48501221133\\nEmail: mateuszppawelec@gmail.com\\nPreferowany kontakt: telefon\\n\\nDane pojazdu:\\n\\nZakres ochrony: OC\\nMarka: Toyota\\nModel: Corolla\\nRok produkcji: 2019\\nData pierwszej rejestracji: 03.09.2019\\nData uzyskania prawa jazdy: 09.10.2006\\nPojemność silnika: 1598\\nMoc silnika: 120\\nPrzeznaczenie pojazdu: Prywatnie\\nSzkody w ostatnich 3 latach: Nie\\n\\nPriorytety klienta:\\n- Najlepsza cena\", \"emailSubject\": \"🎯 Nowy formularz APK\", \"companies\": [\"pzu\", \"generali\", \"uniqa\"]}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "http-request-apk",
+      "name": "Parse APK & Calculate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "When clicking 'Test workflow'",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "When clicking 'Test workflow'": {
+      "main": [
+        [
+          {
+            "node": "Parse APK & Calculate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "versionId": "1",
+  "triggerCount": 0,
+  "tags": []
+}

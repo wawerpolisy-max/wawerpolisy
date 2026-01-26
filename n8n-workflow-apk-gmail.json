@@ -1,0 +1,330 @@
+{
+  "name": "APK Email → Insurance Quotes",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {
+          "from": "",
+          "subject": "🎯 Nowy formularz APK",
+          "labelNames": []
+        },
+        "format": "simple",
+        "options": {
+          "attachmentPrefix": "attachment_",
+          "downloadAttachments": false
+        }
+      },
+      "id": "gmail-trigger",
+      "name": "Gmail Trigger - APK",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "your-gmail-credentials",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "emailBody",
+              "value": "={{ $json.textPlain || $json.textHtml }}"
+            },
+            {
+              "name": "emailSubject",
+              "value": "={{ $json.subject }}"
+            },
+            {
+              "name": "emailFrom",
+              "value": "={{ $json.from }}"
+            },
+            {
+              "name": "emailDate",
+              "value": "={{ $json.date }}"
+            }
+          ]
+        }
+      },
+      "id": "extract-email-data",
+      "name": "Wyciągnij Dane z Emaila",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://your-domain.com/api/apk/parse-and-calculate",
+        "authentication": "none",
+        "requestMethod": "POST",
+        "jsonParameters": true,
+        "options": {
+          "timeout": 120000
+        },
+        "bodyParametersJson": "={\n  \"emailBody\": {{ JSON.stringify($json.emailBody) }},\n  \"emailSubject\": {{ JSON.stringify($json.emailSubject) }},\n  \"companies\": [\"pzu\", \"generali\", \"uniqa\"]\n}"
+      },
+      "id": "parse-and-calculate",
+      "name": "Parse APK & Kalkuluj",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.success }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "check-success",
+      "name": "Sprawdź Sukces",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "customerName",
+              "value": "={{ $json.data.apkData.name }}"
+            },
+            {
+              "name": "customerEmail",
+              "value": "={{ $json.data.apkData.email }}"
+            },
+            {
+              "name": "customerPhone",
+              "value": "={{ $json.data.apkData.phone }}"
+            },
+            {
+              "name": "vehicle",
+              "value": "={{ $json.data.apkData.brand }} {{ $json.data.apkData.model }} {{ $json.data.apkData.year }}"
+            },
+            {
+              "name": "insuranceType",
+              "value": "={{ $json.data.apkData.insuranceType }}"
+            },
+            {
+              "name": "bestCompany",
+              "value": "={{ $json.data.summary.cheapest.company.toUpperCase() }}"
+            },
+            {
+              "name": "bestPrice",
+              "value": "={{ $json.data.summary.cheapest.price }}"
+            },
+            {
+              "name": "savings",
+              "value": "={{ $json.data.summary.savings }}"
+            },
+            {
+              "name": "totalQuotes",
+              "value": "={{ $json.data.summary.total }}"
+            }
+          ],
+          "array": [
+            {
+              "name": "allQuotes",
+              "value": "={{ $json.data.quotes }}"
+            }
+          ]
+        }
+      },
+      "id": "prepare-email-data",
+      "name": "Przygotuj Dane do Emaila",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sendTo": "={{ $json.customerEmail }}",
+        "subject": "✅ Twoje oferty ubezpieczenia {{ $json.vehicle }}",
+        "emailType": "html",
+        "message": "<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body {\n      font-family: Arial, sans-serif;\n      line-height: 1.6;\n      color: #333;\n    }\n    .header {\n      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n      color: white;\n      padding: 30px;\n      text-align: center;\n      border-radius: 10px 10px 0 0;\n    }\n    .content {\n      padding: 30px;\n      background: #f9f9f9;\n    }\n    .quote-card {\n      background: white;\n      border: 1px solid #ddd;\n      border-radius: 8px;\n      padding: 20px;\n      margin: 15px 0;\n      box-shadow: 0 2px 4px rgba(0,0,0,0.1);\n    }\n    .best-offer {\n      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n      color: white;\n      border: none;\n    }\n    .price {\n      font-size: 32px;\n      font-weight: bold;\n      margin: 10px 0;\n    }\n    .savings {\n      background: #4caf50;\n      color: white;\n      padding: 15px;\n      border-radius: 8px;\n      text-align: center;\n      margin: 20px 0;\n    }\n    table {\n      width: 100%;\n      border-collapse: collapse;\n      margin: 20px 0;\n    }\n    th, td {\n      padding: 12px;\n      text-align: left;\n      border-bottom: 1px solid #ddd;\n    }\n    th {\n      background: #667eea;\n      color: white;\n    }\n    .cta-button {\n      display: inline-block;\n      background: #667eea;\n      color: white;\n      padding: 15px 30px;\n      text-decoration: none;\n      border-radius: 5px;\n      margin: 20px 0;\n    }\n  </style>\n</head>\n<body>\n  <div class=\"header\">\n    <h1>🚗 Twoje Oferty Ubezpieczenia</h1>\n    <p>{{ $json.vehicle }}</p>\n  </div>\n  \n  <div class=\"content\">\n    <p>Witaj <strong>{{ $json.customerName }}</strong>!</p>\n    \n    <p>Przygotowaliśmy dla Ciebie porównanie <strong>{{ $json.totalQuotes }}</strong> ofert ubezpieczenia {{ $json.insuranceType }}.</p>\n    \n    <h2>🏆 Najlepsza Oferta</h2>\n    <div class=\"quote-card best-offer\">\n      <h3>{{ $json.bestCompany }}</h3>\n      <div class=\"price\">{{ $json.bestPrice }} PLN / rok</div>\n      <p>✅ Najniższa cena na rynku</p>\n    </div>\n    \n    {{#if $json.savings}}\n    <div class=\"savings\">\n      <h3>💰 Oszczędzasz: {{ $json.savings }} PLN rocznie!</h3>\n      <p>W porównaniu do najdroższej oferty</p>\n    </div>\n    {{/if}}\n    \n    <h2>📊 Wszystkie Oferty</h2>\n    <table>\n      <thead>\n        <tr>\n          <th>Towarzystwo</th>\n          <th>OC</th>\n          <th>AC</th>\n          <th>Razem</th>\n        </tr>\n      </thead>\n      <tbody>\n        {{#each $json.allQuotes}}\n        <tr>\n          <td><strong>{{ company }}</strong></td>\n          <td>{{ quote.ocPrice }} PLN</td>\n          <td>{{ quote.acPrice }} PLN</td>\n          <td><strong>{{ quote.totalPrice }} PLN</strong></td>\n        </tr>\n        {{/each}}\n      </tbody>\n    </table>\n    \n    <h2>📋 Szczegóły Twojego Pojazdu</h2>\n    <ul>\n      <li><strong>Pojazd:</strong> {{ $json.vehicle }}</li>\n      <li><strong>Zakres:</strong> {{ $json.insuranceType }}</li>\n      <li><strong>Telefon:</strong> {{ $json.customerPhone }}</li>\n    </ul>\n    \n    <h2>💬 Chcesz kupić tę polisę?</h2>\n    <p>Skontaktuj się z nami:</p>\n    <ul>\n      <li>📞 <strong>+48 123 456 789</strong></li>\n      <li>✉️ <strong>kontakt@wawerpolisy.pl</strong></li>\n      <li>🌐 <strong>www.wawerpolisy.pl</strong></li>\n    </ul>\n    \n    <a href=\"https://wawerpolisy.pl/kontakt\" class=\"cta-button\">Kup Teraz</a>\n    \n    <hr>\n    <p style=\"font-size: 12px; color: #999;\">\n      Oferta ważna 30 dni. Ceny mogą ulec zmianie.<br>\n      Wiadomość wygenerowana automatycznie przez system WawerPolisy.\n    </p>\n  </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "id": "send-gmail",
+      "name": "Wyślij Email z Ofertami",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [1250, 200],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "your-gmail-credentials",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "messageId": "={{ $node[\"Gmail Trigger - APK\"].json.id }}",
+        "labelIds": ["INBOX"]
+      },
+      "id": "mark-email-read",
+      "name": "Oznacz Email jako Przeczytany",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [1450, 200],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "your-gmail-credentials",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "errorMessage",
+              "value": "={{ $json.error }}"
+            },
+            {
+              "name": "emailSubject",
+              "value": "={{ $node[\"Gmail Trigger - APK\"].json.subject }}"
+            }
+          ]
+        }
+      },
+      "id": "error-handling",
+      "name": "Obsłuż Błąd",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1050, 400]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sendTo": "admin@wawerpolisy.pl",
+        "subject": "❌ Błąd parsowania APK: {{ $json.emailSubject }}",
+        "message": "Wystąpił błąd podczas przetwarzania emaila APK:\n\nBłąd: {{ $json.errorMessage }}\n\nTemat: {{ $json.emailSubject }}\n\nSprawdź logi n8n dla więcej szczegółów."
+      },
+      "id": "send-error-notification",
+      "name": "Wyślij Powiadomienie o Błędzie",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [1250, 400],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "your-gmail-credentials",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Gmail Trigger - APK": {
+      "main": [
+        [
+          {
+            "node": "Wyciągnij Dane z Emaila",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wyciągnij Dane z Emaila": {
+      "main": [
+        [
+          {
+            "node": "Parse APK & Kalkuluj",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse APK & Kalkuluj": {
+      "main": [
+        [
+          {
+            "node": "Sprawdź Sukces",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sprawdź Sukces": {
+      "main": [
+        [
+          {
+            "node": "Przygotuj Dane do Emaila",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Obsłuż Błąd",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Przygotuj Dane do Emaila": {
+      "main": [
+        [
+          {
+            "node": "Wyślij Email z Ofertami",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wyślij Email z Ofertami": {
+      "main": [
+        [
+          {
+            "node": "Oznacz Email jako Przeczytany",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obsłuż Błąd": {
+      "main": [
+        [
+          {
+            "node": "Wyślij Powiadomienie o Błędzie",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "id": "apk-email-insurance-automation",
+  "meta": {
+    "instanceId": "wawerpolisy-n8n"
+  },
+  "tags": ["insurance", "automation", "apk", "gmail"]
+}

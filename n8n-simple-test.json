@@ -1,0 +1,36 @@
+{
+  "name": "APK Test Simple",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual",
+      "name": "Manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://77.42.77.255:3000/api/apk/parse-and-calculate",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"emailBody\": \"Test\",\n  \"emailSubject\": \"Test\",\n  \"companies\": [\"pzu\"]\n}",
+        "options": {}
+      },
+      "id": "http",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [460, 300]
+    }
+  ],
+  "connections": {
+    "Manual": {
+      "main": [[{"node": "HTTP Request", "type": "main", "index": 0}]]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "simple-test-1"
+}
